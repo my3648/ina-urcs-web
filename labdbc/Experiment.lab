@@ -1,0 +1,11 @@
+[SETTINGS]
+Version;V1.1
+MultiRasterSeparator;&
+
+[Label]
+
+[RAMCELL]
+AirC_pAnaClnt;1ms time synchronous;
+AirC_pClnt;segment synchronous;
+AirC_swtClntPresSel;10ms time synchronous;
+

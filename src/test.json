@@ -1,0 +1,89 @@
+{
+  "filename": "CCP.a2l",
+  "adid": "5F56DE6160097C3036741070",
+  "PA": null,
+  "meta": {
+    "projectId": "251/4420ET.4-ECU DI 5",
+    "vehId": "sdfsdf",
+    "comment": "fgfgf",
+    "packages": ["engine fuel path", "D-IGC"],
+    "tasks": ["cold start -10C"],
+    "mainPack": "engine fuel path",
+    "mainTask": "cold start -10C",
+    "a2lName": "CCP.a2l",
+    "hexName": "",
+    "user": null,
+    "userGroup": null,
+    "investigation": {
+      "investigationTopic": "",
+      "investigationSubTopic": "",
+      "investigationCaseId": ""
+    },
+    "confName": "fgfg",
+    "a2lChannel": 0,
+    "BAUDRATE": 500000,
+    "BMR": false
+  },
+  "recordConf": [{
+    "Type": "RecordCfg",
+    "Frame": {
+      "Record": "false",
+      "Time": 2
+    },
+    "MisFrameCoeff": 0.2,
+    "ChannelCfg": [{
+      "Channel": 0,
+      "Baudrate": 500000,
+      "CANType": 0,
+      "CANFDBaudrate": 2000000,
+      "CCP": [{
+        "RequestId": 785,
+        "ResponseId": 801,
+        "ByteOrder": "LSB_FIRST",
+        "DAQ": [{
+          "MsgId": 832,
+          "DaqNumber": 0,
+          "EventChannel": 1,
+          "CycleTime": 10,
+          "Measurement": [],
+          "Measurements": [
+            ["AC_trqMaxAC", "AirC_trqCmprMax", "DevLib_stPwrStgEnaCond", "AirC_stPsCmpr_mp"],
+            ["AirC_stPsCmpr", "B_kl15"]
+          ]
+        }, {
+          "MsgId": 848,
+          "DaqNumber": 1,
+          "EventChannel": 2,
+          "CycleTime": 100,
+          "Measurement": [],
+          "Measurements": [
+            ["AirC_stSwtRaw", "AirC_stSwt", "Com_stAC", "AirC_stSwtPrs"]
+          ]
+        }],
+        "StationAddress": 44289
+      }]
+    }, {
+      "Channel": 1,
+      "Baudrate": 500000,
+      "DBC": []
+    }],
+    "Tag": {
+      "ProjectId": "251/4420ET.4-ECU DI 5",
+      "VehicleId": "sdfsdf",
+      "Package": ["engine fuel path", "D-IGC"],
+      "Task": ["cold start -10C"],
+      "MainPack": "engine fuel path",
+      "MainTask": "cold start -10C",
+      "Comment": "fgfgf",
+      "A2L": "CCP.a2l",
+      "HEX": "",
+      "Tester": null,
+      "UserGroup": "internal",
+      "confName": "DataCfg_fgfg_2020-9-8-10-46-14",
+      "protoolType": "通过OBD连接",
+      "BMR": false
+    },
+    "StartRecord": [],
+    "StopRecord": []
+  }]
+}

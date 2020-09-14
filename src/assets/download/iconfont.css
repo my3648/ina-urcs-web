@@ -1,0 +1,25 @@
+@font-face {font-family: "iconfont";
+  src: url('iconfont.eot?t=1587025541584'); /* IE9 */
+  src: url('iconfont.eot?t=1587025541584#iefix') format('embedded-opentype'), /* IE6-IE8 */
+  url('data:application/x-font-woff2;charset=utf-8;base64,d09GMgABAAAAAAPIAAsAAAAAB9gAAAN5AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHEIGVgCDBgqDQIMQATYCJAMMCwgABCAFhG0HNxvXBsgOJQXBwECBIQFgPHyNpe/v7iG6RAGqTBTB+KgCybJDoaNaY2tMKzSCY1t/g+/ZZwcxTzrRvTbddXOWs9oH48vC/1xOb4If3lXfaruMOWnO50e9AOOAAtob25RogSToPcYm2P2cJtA0bzzRaUJaHjBQGJMCcZ8TU8Ag5VJqGkNdqJasLOKZino6T2fw1P9+/LMZBiSVzJh5djOeAVE/RzyP0O6YdYBrLkI9XgDcOjI2AIW4URq6RDvMbtDWVEw69ZVVRUhjJf7/x1ephqr5h0cSRJVR3wYr6EhOSm3zSfyK0Jy1+ubGV9HCOV5QcnyHmtJptYdmRt1Gu96n+SujZ/J2sxfYbzgdWHAlbGbHOiFCzkfWnhnNHh7aeO1aAX/FL/u68dV3+bME+zkLqozyj14Nh7d02l26VrRyT8deYb/z4n2FOexsfm2Hbe0sYUOnHS3s79zH71m6l71eeF3Iv5qfdW1iXv71Sb6Tz8vjkwwF/COu5P18MyrBqX+e47yTnou73jgumR7j8n+eu69r8fatZpdeH7rfknig47w9+7V8LkyoqvohEcD2Hcu/82KsCjvBj4qCnEWOi2aFfhY5paU9IX67x+h30/3mrxWxpXMu1IeadzMRPVje+H/jxpfOw9znGZs8n/d1HwT/W3Be1NzIuWa7LmhSkqnRzNg7ltyTR3F/fqAL6dQ0RLlT3lnpj8R9EpjKTt++gOFylGMP3+LCWo8GL91GL5DDeaAKwOxMfpfOQpG+/8DfeGW850mledhXA+MCPu8L7PVdszPtaqlLtFb/LnXLpqJqDXcusspW6YXsGv2XoQAFb/aTamBoHfUwAeJAqPNqgKRmDrK6BbSQG1DRsgVVdQfQtC5xfcsIpi1KA2t6CYS+LZB0vYSs7yxayLtQMfUWqvqhDU0XwnrHlqXgjGIxoghiYHUj5GilgrW8xChozEHiWhmFk1qfLkBYwyWgt4dXtpCIFAiPMUdTJ/YhhIUsVsphAjkPyWRKqMJKCaKJRw0hqhBPT7bsRR60Ug6MnMAQCoEwoGqNIA5NSYF12xNGuc/nQMRqyVBwDasiWwDBNLjuIW8evFqgiSZFK9a1XKJRR8wHQbAgFqYkByWQACIzs0qQqnyYBEIjPNT0SKuE8MRWbFuTx/wW+fPtgCbjwBwpchTV+1wDRyl0CrkEDgAAAAA=') format('woff2'),
+  url('iconfont.woff?t=1587025541584') format('woff'),
+  url('iconfont.ttf?t=1587025541584') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+ */
+  url('iconfont.svg?t=1587025541584#iconfont') format('svg'); /* iOS 4.1- */
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-lixian:before {
+  content: "\e73e";
+}
+
+.icon-WiFi:before {
+  content: "\e625";
+}
+
