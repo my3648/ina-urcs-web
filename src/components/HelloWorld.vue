@@ -7,13 +7,18 @@
           text-color="#fff" active-text-color="#ffd04b" router style="position:relative">
           <!-- @select="handleSelect" -->
           <el-menu-item index="/home">Home</el-menu-item>
-          <el-menu-item v-if="username=='admin'" index="/admin">Admin</el-menu-item>
-          <el-menu-item index="/overview">Overview</el-menu-item>
-          <el-menu-item v-if="username!='admin'" index="/test">Test</el-menu-item>
-          <el-menu-item index="/index">Index</el-menu-item>
-          <el-menu-item index="/analytics">Analytics</el-menu-item>
+          <el-menu-item v-if="this.right.admin" index="/admin">Admin</el-menu-item>
+          <el-menu-item v-if="this.right.overview" index="/overview">Overview</el-menu-item>
+          <el-menu-item v-if="this.right.test" index="/test">Test</el-menu-item>
+          <el-menu-item v-if="this.right.index" index="/index">Index</el-menu-item>
+          <el-menu-item v-if="this.right.analytics_view" index="/analytics">Analytics</el-menu-item>
           <el-menu-item index="/datamining" v-if="false">DataMining</el-menu-item>
-          <el-menu-item index="/application">Application</el-menu-item>
+          <el-submenu index="" v-if="this.right.application_svw||this.right.application_investigate">
+            <template slot="title">Application</template>
+            <el-menu-item index="/svw" v-if="this.right.application_svw">SVW</el-menu-item>
+            <el-menu-item index="/investigate" v-if="this.right.application_investigate">Investigate</el-menu-item>
+          </el-submenu>
+
           <el-dropdown @command="logout" style="position:absolute;right:1em;top:50%;transform:translateY(-50%);">
             <el-button class="logout" :style="{background:menubgc}" style="border-width:2px" icon="el-icon-user-solid"
               type="info">{{username}}
@@ -26,7 +31,7 @@
               <el-dropdown-item command="a">Log Out</el-dropdown-item>
               <el-dropdown-item command="b">Change Password</el-dropdown-item>
               <el-dropdown-item command="c">Change Email/Phone</el-dropdown-item>
-              <el-dropdown-item command="d" v-if="username=='admin'">User List</el-dropdown-item>
+              <el-dropdown-item command="d" v-if="this.right.admin">User List</el-dropdown-item>
 
             </el-dropdown-menu>
           </el-dropdown>
@@ -77,9 +82,11 @@
 export default {
   data() {
     return {
-      username: localStorage.getItem("username")
+      username: localStorage.getItem("username"),
+      right: JSON.parse(localStorage.getItem("urcs"))||"",
     };
   },
+  created() {},
 
   methods: {
     href() {
@@ -89,7 +96,7 @@ export default {
       if (command == "a") {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
-        localStorage.removeItem("group");
+        localStorage.removeItem("userGroup");
 
         this.$router.push("/login");
       } else if (command == "b") {
@@ -99,10 +106,10 @@ export default {
       } else if (command == "d") {
         this.$router.push("/userlist");
       }
-    }
+    },
   },
   computed: {
-    menubgc: function() {
+    menubgc: function () {
       return this.$route.path == "/home" ? "rgba(1,1,1,0)" : "#333";
     },
     activePath() {
@@ -113,8 +120,8 @@ export default {
 
       // console.log(this.$route.path);
       return path;
-    }
-  }
+    },
+  },
 };
 </script>
 

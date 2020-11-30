@@ -102,7 +102,7 @@ export default {
     };
   },
   created(){
-    this.$http.post('/admin/getPersonalInfo',{PA:this.username}).then((res)=>{
+    this.$http.post('/bm/getPersonalInfo',{PA:this.username}).then((res)=>{
       console.log(res);
       var {res,data,detail}=res.data;
       if(res=='V'){
@@ -128,7 +128,7 @@ export default {
         if (valid) {
           this.logining = true;
           this.$http
-            .post("/admin/updatePersonalInfo", this.ruleForm)
+            .post("/bm/updatePersonalInfo", this.ruleForm)
             .then(res => {
               console.log(res);
               // var { data, status } = res;

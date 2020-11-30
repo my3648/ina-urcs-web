@@ -31,21 +31,20 @@
         <!-- <el-input placeholder="请输入标签分组名"   v-focus="true"  v-if="editPackage" v-model="input"
       size="mini"></el-input> -->
         <!-- <div > -->
-          <div v-for="(tag, index) in item.packageItems" :key="index" style="display:inline-block">
-            <!-- v-if="!editPackage[pindex][index]" -->
+        <div v-for="(tag, index) in item.packageItems" :key="index" style="display:inline-block">
+          <!-- v-if="!editPackage[pindex][index]" -->
 
-            <my-tag :ref="'pactag_' + pindex" @delete="deletePackage(pindex, index)"
-              :tag.sync="package[pindex]['packageItems'][index]" :name.sync="package[pindex]['groupName']"
-              :index="index" :tagDict.sync="tagDict[tag]" :enshow="true" style="display:inline-block"></my-tag>
-            <!-- 可能是因为input值是双向绑定的 tagDict[input]自动会改变 无需再双向绑定tagDict的值 -->
-          </div>
-          <i class="el-icon-plus" @click="addPackage(pindex)"></i>
-          <div style="position:absolute;right:0;bottom:8px">
-            <i @click="minPackageRow(pindex)" style="font-size:32px;line-height:37px;"
-              class="el-icon-remove-outline"></i>
-            <i @click="addPackageRow(pindex)" style="font-size:32px;line-height:37px;"
-              class="el-icon-circle-plus-outline"></i>
-          </div>
+          <my-tag :ref="'pactag_' + pindex" @delete="deletePackage(pindex, index)"
+            :tag.sync="package[pindex]['packageItems'][index]" :name.sync="package[pindex]['groupName']" :index="index"
+            :tagDict.sync="tagDict[tag]" :enshow="true" style="display:inline-block"></my-tag>
+          <!-- 可能是因为input值是双向绑定的 tagDict[input]自动会改变 无需再双向绑定tagDict的值 -->
+        </div>
+        <i class="el-icon-plus" @click="addPackage(pindex)"></i>
+        <div style="position:absolute;right:0;bottom:8px">
+          <i @click="minPackageRow(pindex)" style="font-size:32px;line-height:37px;" class="el-icon-remove-outline"></i>
+          <i @click="addPackageRow(pindex)" style="font-size:32px;line-height:37px;"
+            class="el-icon-circle-plus-outline"></i>
+        </div>
 
         <!-- </div> -->
 
@@ -90,12 +89,12 @@
       </h3>
 
       <el-table @sort-change="sortTable" :data="tableDataEqu" style="width: 100%">
-       
+
         <el-table-column sortable="custom" prop="sn" label="sn">
         </el-table-column>
         <el-table-column sortable="custom" prop="applier" label="事件（借/还）">
           <template scope="scope">
-           {{scope.row.applier=="admin"?'归还':'借用'}}
+            {{scope.row.applier=="admin"?'归还':'借用'}}
           </template>
 
         </el-table-column>
@@ -266,6 +265,26 @@
       </el-tabs>
 
     </div>
+    <el-divider></el-divider>
+    <div>
+      <h3>Ulog辅助管理</h3>
+      <div style="margin:0.8em 0" v-for="(item,index) in commandList" :key="index">
+        <span class="label">{{item.title}}</span>
+        <el-input size="medium" v-model="item.device" style="width:150px;margin:0 1em" placeholder="Ulog设备号"></el-input>
+        <el-button size="medium" @click="command(item)" type="primary">下发命令</el-button>
+      </div>
+      <!-- <div style="margin:0.8em 0">
+        <span class="label">设置Device.No</span>
+        <el-input size="medium" style="width:150px;margin:0 1em" placeholder="Ulog设备号"></el-input>
+        <el-button size="medium" type="primary">下发命令</el-button>
+      </div>
+      <div style="margin:0.8em 0">
+        <span class="label">获取最近的设备日志</span>
+        <el-input size="medium" style="width:150px;margin:0 1em" placeholder="Ulog设备号"></el-input>
+        <el-button size="medium" type="primary">下发命令</el-button>
+      </div> -->
+
+    </div>
 
     <el-dialog title="excel表格数据：" :allresult="allresultExcel" :visible.sync="dialogVisible" width="1200px">
       <el-button type="primary" size="small" @click="transExcel()">点击上传文件</el-button>
@@ -280,10 +299,6 @@
         <el-button type="primary" @click="mergeTable()">确 定</el-button>
       </span>
     </el-dialog>
-    <!-- <form id="downloadForm" method="POST" action="/admin/downloadDeviceLendingHistoryBySN">
-      <input type="hidden" name="startTime" v-model="this.allDeviceForm.time[0]">
-      <input type="hidden" name="endTime" v-model="this.allDeviceForm.time[2]">
-    </form> -->
   </div>
 </template>
 
@@ -307,6 +322,23 @@ export default {
       // tableData: [], //单页数据  移到子组件了
       // result: [], //总数据过滤后  移到子组件了
       // searchTableVal: "",
+      commandList: [
+        {
+          title: "获取最近的设备日志",
+          url: "ulogSetDeviceNo",
+          device: "",
+        },
+        {
+          title: "设置DeviceNo.且绑定Iccid值",
+          url: "ulogGetDeviceNo",
+          device: "",
+        },
+        {
+          title: "获取设备Device",
+          url: "ulogGetLog",
+          device: "",
+        },
+      ],
       protableLoading: false,
       allresult: [],
       allresultExcel: [],
@@ -372,7 +404,6 @@ export default {
       allresultDev: [],
       resultDev: [],
       tableDataDev: [],
-      
     };
   },
   computed: {
@@ -399,42 +430,9 @@ export default {
     // }
   },
   mounted() {
-    //   this.$http
-    // .post("/login", {
-    //   username: "admin",
-    //   password: "admin"
-    // })
-    // .then(res => {
-    //   console.log(res);
-
-    //   var { res, group, token } = res.data;
-    //   if (res == "V") {
-    //     localStorage.setItem("token", token);
-    //     localStorage.setItem("group", group);
-    //     localStorage.setItem("username", "admin");
-    //   } else {
-    //     alert("登录失败");
-    //   }
-    // }).catch(res=>{
-    //   alert('登录错误')
-    // });
-
-    // this.$http
-    //   .post("/admin/addNewUser", {
-    //     user: "li.gao",
-    //     email: "li.gao@uaes.com",
-    //     password: "gaoli",
-    //     phoneNumber: "123456789"
-    //   })
-    //   .then(res => {
-    //     console.log(res);
-    //   })
-    //   .catch(res => {
-    //     // alert('登录错误')
-    //   });
     this.protableLoading = true;
     this.$http
-      .get("/admin/getProjectID")
+      .get("/BorrowingManagement/getProjectID")
       .then((res) => {
         this.protableLoading = false;
 
@@ -469,7 +467,7 @@ export default {
           message: "载入项目号失败!",
         });
       });
-    this.$http.get("/admin/getPackage").then((res) => {
+    this.$http.get("/BorrowingManagement/getPackage").then((res) => {
       console.log(res);
       // this.package = Package;
       // console.log(JSON.stringify(this.package));
@@ -506,10 +504,11 @@ export default {
       //   }
       // ];
     });
-    this.$http.get("/admin/getTask").then((res) => {
+    this.$http.get("/BorrowingManagement/getTask").then((res) => {
+      console.log(res);
       this.task = res.data.task;
     });
-    this.$http.get("/admin/getDeviceRequest").then((res) => {
+    this.$http.get("/BorrowingManagement/getDeviceRequest").then((res) => {
       console.log(res);
       this.allresultEqu = res.data.data;
       // this.allresultEqu = [
@@ -682,6 +681,34 @@ export default {
     });
   },
   methods: {
+    command(item) {
+      var { url, device } = item;
+      this.$http
+        .post(
+          "http://47.116.135.144:30002/ina-urcs/common/v1.0.0/web/admin/" + url,
+          { deviceId: device }
+        )
+        .then((res) => {
+          console.log(res);
+          var { success } = res.data;
+          if (success) {
+            this.$alert("下发命令成功", "成功", {
+              type: "success",
+              // closeOnClickModal: true
+            });
+          } else {
+            this.$alert("下发命令失败", "失败", {
+              type: "error",
+              // closeOnClickModal: true
+            });
+          }
+        })
+        .catch((err) => {
+          this.$alert("下发命令失败", "失败", {
+            type: "error",
+          });
+        });
+    },
     transExcel() {
       this.$refs.excel.dispatchEvent(new MouseEvent("click"));
     },
@@ -698,7 +725,7 @@ export default {
       })
         .then(() => {
           this.$http
-            .post("/admin/changeProjectID", {
+            .post("/BorrowingManagement/changeProjectID", {
               projectNumberData: this.allresult,
             })
             .then((res) => {
@@ -735,7 +762,7 @@ export default {
       })
         .then(() => {
           this.$http
-            .post("/admin/changePackage", {
+            .post("/BorrowingManagement/changePackage", {
               package: this.package,
               translate: this.tagDict,
             })
@@ -772,7 +799,7 @@ export default {
       })
         .then(() => {
           this.$http
-            .post("/admin/changeTask", { task: this.task })
+            .post("/BorrowingManagement/changeTask", { task: this.task })
             .then((res) => {
               console.log(res);
               this.$message({
@@ -854,12 +881,12 @@ export default {
     submitExcel(e) {
       console.log(e.target.files[0]);
       let formData = new FormData();
-      formData.append("file", e.target.files[0]);
+      formData.append("XMH_excel", e.target.files[0]);
       formData.append("filename", e.target.files[0].name);
       formData.append("additionalArgs", JSON.stringify({}));
 
       this.$http
-        .post("/upload/ProjectIDDataFile", formData)
+        .post("/bm/ProjectIDDataFile", formData)
         .then((res) => {
           //  this.dialogVisible = true;
           console.log(res);
@@ -920,16 +947,26 @@ export default {
         return function (m, n) {
           var a = m[p];
           var b = n[p];
-          // console.log(a > b);
-          return a > b;
+          if (a > b) {
+            return 1;
+          } else if (a < b) {
+            return -1;
+          } else {
+            return 0;
+          }
         };
       }
       function compareMin(p) {
         return function (m, n) {
           var a = m[p];
           var b = n[p];
-          // console.log(b > a);
-          return b > a;
+          if (b > a) {
+            return 1;
+          } else if (b < a) {
+            return -1;
+          } else {
+            return 0;
+          }
         };
       }
 
@@ -960,16 +997,26 @@ export default {
         return function (m, n) {
           var a = m[p];
           var b = n[p];
-          console.log(a > b);
-          return a > b;
+          if (a > b) {
+            return 1;
+          } else if (a < b) {
+            return -1;
+          } else {
+            return 0;
+          }
         };
       }
       function compareMin(p) {
         return function (m, n) {
           var a = m[p];
           var b = n[p];
-          console.log(b > a);
-          return b > a;
+          if (b > a) {
+            return 1;
+          } else if (b < a) {
+            return -1;
+          } else {
+            return 0;
+          }
         };
       }
 
@@ -989,7 +1036,7 @@ export default {
       this.$refs.deviceFormName.validate((valid) => {
         if (valid) {
           this.$http
-            .post("/admin/getDeviceLendingHistoryBySN", this.deviceForm)
+            .post("/bm/getDeviceLendingHistoryBySN", this.deviceForm)
             .then((res) => {
               if (res.data.res == "V") {
                 console.log(res);
@@ -1017,34 +1064,35 @@ export default {
     downloadTable() {
       this.$http
         .post(
-          "/admin/projectNumberDataDemo",
+          "/bm/projectNumberDataDemo",
+          {},
 
-          { responseType: "arraybuffer" }
+          { responseType: "blob" }
         )
         .then((res) => {
-          let blob = new Blob([res.data], { type: "application/vnd.ms-excel" });
-          let objectUrl = URL.createObjectURL(blob); // 创建URL
-          location.href = objectUrl;
-          URL.revokeObjectURL(objectUrl); // 释放内存
-          // console.log(res);
+          // const contentType = res.headers['content-type'];
+          // let blob = new Blob([res.data], { type: "application/vnd.ms-excel" });
+          // let objectUrl = URL.createObjectURL(blob); // 创建URL
+          // location.href = objectUrl;
+          // URL.revokeObjectURL(objectUrl); // 释放内存
+          console.log(res);
 
-          // // if (res.data.res == "V") {
-          // let url = window.URL.createObjectURL(new Blob([res.data]));
-          // let link = document.createElement("a");
-          // let fileName =
-          //   this.allDeviceForm.time[0] + "~" + this.allDeviceForm.time[1];
-          // var random = (Math.random() * 100000).toFixed(0);
-          // link.style.display = "none";
-          // link.href = url;
-          // link.setAttribute("download", fileName + "%" + random + ".xlsx"); // 自定义下载文件名（如exemple.txt）
-          // document.body.appendChild(link);
-          // link.click();
-          // // } else {
-          // //   this.$message({
-          // //     type: "warning",
-          // //     message: res.data.detail
-          // //   });
-          // // }
+          // if (res.data.res == "V") {
+          let url = window.URL.createObjectURL(new Blob([res.data]));
+          let link = document.createElement("a");
+          let fileName = "";
+          var random = (Math.random() * 100000).toFixed(0);
+          link.style.display = "none";
+          link.href = url;
+          link.setAttribute("download", fileName + "%" + random + ".xlsx"); // 自定义下载文件名（如exemple.txt）
+          document.body.appendChild(link);
+          link.click();
+          // } else {
+          //   this.$message({
+          //     type: "warning",
+          //     message: res.data.detail
+          //   });
+          // }
         })
         .catch((res) => {
           console.log(res);
@@ -1058,7 +1106,7 @@ export default {
         if (valid) {
           this.$http
             .post(
-              "/admin/downloadDeviceLendingHistoryBySN",
+              "/bm/downloadDeviceLendingHistoryBySN",
               {
                 startTime: this.allDeviceForm.time[0],
                 endTime: this.allDeviceForm.time[1],
@@ -1101,9 +1149,6 @@ export default {
       });
     },
     approveEqu(row) {
-      // /admin/updateDeviceBorrower
-      // /admin/deleteApplyRequest
-
       this.$confirm("确定要通过此设备的借用吗?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -1111,7 +1156,7 @@ export default {
       })
         .then(() => {
           this.$http
-            .post("/admin/updateDeviceBorrower", {
+            .post("/bm/updateDeviceBorrower", {
               sn: row.sn,
               borrower: row.applier,
               uid: row.uid,
@@ -1154,7 +1199,7 @@ export default {
       })
         .then(() => {
           this.$http
-            .post("/admin/deleteApplyRequest", { uid: uid })
+            .post("/ec/deleteMyApply", { uid: uid })
             .then((res) => {
               console.log(res);
               if (res.data.res == "V") {
@@ -1289,8 +1334,16 @@ export default {
 .el-table_2_column_11 {
   border-left: 1px dashed #111;
 }
-.package{
-  position:relative;padding-right:70px;
+.package {
+  position: relative;
+  padding-right: 70px;
+}
+.label {
+  color: #606266;
+  font-size: 15px;
+  font-weight: 550;
+  display: inline-block;
+  width: 300px;
 }
 /* .admin /deep/ .el-dropdown .el-button {
   line-height: inherit;

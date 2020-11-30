@@ -1,11 +1,13 @@
 <template>
+<!-- 高力版本 -->
   <div class="login-container">
     <!-- <div style="position:absolute;top:0;left:0;right:0;bottom:0">
     <img src="@/assets/navigation2.png" style="width:100%;height:100%" alt="">
 
     </div> -->
     <div class="out">
-          <h3 style="color:#fff;text-align:center;font-size:22px;text-shadow: 0 0 3px #cac6c6;">UAES Remote Calibration System</h3>
+          <h3 style="color:#fff;text-align:center;font-size:22px;text-shadow:3px 3px 6px #777;">联合汽车电子智慧匹配平台</h3>
+          <h3 style="color:#fff;text-align:center;font-size:22px;text-shadow: 3px 3px 6px #777;">UAES Intelligent Calibration System</h3>
 
     <el-form :model="ruleForm" :rules="rules" status-icon ref="ruleForm" label-position="left" label-width="0px"
       class="demo-ruleForm login-page">
@@ -56,16 +58,21 @@ export default {
       this.$refs.ruleForm.validate(valid => {
         if (valid) {
           this.logining = true;
-          this.$http.post("/login", this.ruleForm).then(res => {
+          // userLogin  
+          
+          this.$http.post("http://47.116.135.144:30002/ina-uics/common/v1.0.0/web/login", this.ruleForm).then(res => {
             console.log(res);
             // var { data, status } = res;
-            var {res,token,group}=res.data
-            if (res == 'V') {
+            var {res,token,userGroup,ucdm,ucos,urcs}=res.data
+            if (res) {
               this.logining = false;
               localStorage.setItem('username', this.ruleForm.username)
               localStorage.setItem('token', token)
-              localStorage.setItem('group', group)
-              this.$router.push({ path: "/" });
+              localStorage.setItem('userGroup', userGroup)
+              localStorage.setItem('urcs', JSON.stringify(urcs))
+              localStorage.setItem('ucos', ucos)
+              localStorage.setItem('ucdm', ucdm)
+              this.$router.push({ path: "/navigation" });
              
 
             } else {
@@ -99,24 +106,33 @@ export default {
 </script>
 
 <style scoped>
-/* html{
 
-} */
 
 .login-container {
-  width: 100%;
+   /* width: 100%;
   height: 100%;
   min-height: 700px;
   background-image: url(../assets/background.jpg);
-  background-size: cover; /* 使图片平铺满整个浏览器（从宽和高的最大需求方面来满足，会使某些部分无法显示在区域中） */
+  background-size: cover; 
   position: absolute;
+  left:0;
+  right:0;
+  top:0;
+  bottom:0;
   z-index: -1;
-  background-repeat: no-repeat;
-}
-.out{
-  /* margin: 180px auto; */
+  min-width:1100px; */
 
+    height: 100%;
+    min-height: 700px;
+
+    background-image: url("../assets/background.jpg");
+    background-size: 100% 100%;
+    /* background-size: cover; */
+    
+
+  overflow:hidden;
 }
+
 .login-page {
   -webkit-border-radius: 5px;
   border-radius: 5px;
@@ -129,7 +145,7 @@ export default {
 
 }
 .out{
-    margin: 180px auto;
+    margin: 8% auto;
 
   /* width: 350px; */
 

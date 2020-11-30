@@ -110,7 +110,7 @@ export default {
         if (valid) {
           this.logining = true;
           this.$http
-            .post("/admin/updatePersonalInfo", this.ruleForm)
+            .post("/bm/updatePersonalInfo", this.ruleForm)
             .then(res => {
               console.log(res);
               // var { data, status } = res;

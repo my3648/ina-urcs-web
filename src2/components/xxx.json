@@ -1,0 +1,287 @@
+{
+  "filename": "AL1707DA00.a2l",
+  "adid": "5F6C0A3831F9EA3433A8A31E",
+  "PA": "mei",
+  "meta": {
+    "projectId": "ina_test",
+    "vehId": "sd",
+    "comment": "xxx",
+    "packages": ["engine precalibration", "engine fuel path"],
+    "tasks": ["cold start -20C", "cold start -30C"],
+    "mainPack": "engine precalibration",
+    "mainTask": "cold start -20C",
+    "a2lName": "AL1707DA00.a2l",
+    "hexName": "hex.hex",
+    "user": "mei",
+    "userGroup": null,
+    "investigation": {
+      "investigationTopic": "",
+      "investigationSubTopic": "",
+      "investigationCaseId": ""
+    },
+    "confName": "ccccc",
+    "a2lChannel": 0,
+    "BAUDRATE": 1000000,
+    "BMR": false
+  },
+  "recordConf": [{
+    "Type": "RecordCfg",
+    "Frame": {
+      "Record": "false",
+      "Time": 2
+    },
+    "MisFrameCoeff": 0.2,
+    "ChannelCfg": [{
+      "Channel": 2,
+      "Baudrate": 1000000,
+      "CANType": 0,
+      "CANFDBaudrate": 2000000,
+      "XCP": [{
+        "RequestId": 1707,
+        "ResponseId": 1705,
+        "ByteOrder": "MSB_FIRST",
+        "DAQ": [{
+          "MsgId": 1705,
+          "DaqNumber": 0,
+          "EventChannel": 0,
+          "CycleTime": 4,
+          "Measurement": [],
+          "Measurements": [
+            ["AirC_pClnt", "AirC_pCANClnt"]
+          ],
+          "FirstPID": 0,
+          "Priority": 7
+        }, {
+          "MsgId": 1705,
+          "DaqNumber": 1,
+          "EventChannel": 1,
+          "CycleTime": 10,
+          "Measurement": [],
+          "Measurements": [
+            ["ACEvpT_t", "ACEvpT_uRaw", "Com_tClnt", "B_kl15"]
+          ],
+          "FirstPID": 1,
+          "Priority": 6
+        }, {
+          "MsgId": 1705,
+          "DaqNumber": 2,
+          "EventChannel": 2,
+          "CycleTime": 100,
+          "Measurement": [],
+          "Measurements": [
+            ["TS_stMnSwtAC", "AirC_stSwt"]
+          ],
+          "FirstPID": 2,
+          "Priority": 5
+        }]
+      }]
+    }, {
+      "Channel": 1,
+      "BAUDRATE": 500000,
+      "DBC": [{
+        "MsgID": 513,
+        "MsgName": "C_K10_01_MSG0",
+        "Signals": [{
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH01",
+          "Offset": 0,
+          "Position": 7,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 513,
+          "MsgName": "C_K10_01_MSG0",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }, {
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH02",
+          "Offset": 0,
+          "Position": 23,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 513,
+          "MsgName": "C_K10_01_MSG0",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }, {
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH03",
+          "Offset": 0,
+          "Position": 39,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 513,
+          "MsgName": "C_K10_01_MSG0",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }, {
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH04",
+          "Offset": 0,
+          "Position": 55,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 513,
+          "MsgName": "C_K10_01_MSG0",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }],
+        "CycleTime": 10
+      }, {
+        "MsgID": 514,
+        "MsgName": "C_K10_01_MSG1",
+        "Signals": [{
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH05",
+          "Offset": 0,
+          "Position": 7,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 514,
+          "MsgName": "C_K10_01_MSG1",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }, {
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH06",
+          "Offset": 0,
+          "Position": 23,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 514,
+          "MsgName": "C_K10_01_MSG1",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }, {
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH07",
+          "Offset": 0,
+          "Position": 39,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 514,
+          "MsgName": "C_K10_01_MSG1",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }, {
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH08",
+          "Offset": 0,
+          "Position": 55,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 514,
+          "MsgName": "C_K10_01_MSG1",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }],
+        "CycleTime": 10
+      }, {
+        "MsgID": 515,
+        "MsgName": "C_K10_01_MSG2",
+        "Signals": [{
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH09",
+          "Offset": 0,
+          "Position": 7,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 515,
+          "MsgName": "C_K10_01_MSG2",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }, {
+          "BitLen": 16,
+          "ByteOrder": 0,
+          "Factor": 0.1,
+          "Name": "C_K10_01_CH10",
+          "Offset": 0,
+          "Position": 23,
+          "Scale": 0.1,
+          "Type": 1,
+          "Unit": "DegreeC",
+          "MsgID": 515,
+          "MsgName": "C_K10_01_MSG2",
+          "editshow": false,
+          "Max": 10.1,
+          "Min": 1.01,
+          "Comment": "runcar",
+          "ValTab": []
+        }],
+        "CycleTime": 10
+      }]
+    }],
+    "Tag": {
+      "ProjectId": "ina_test",
+      "VehicleId": "sd",
+      "Package": ["engine precalibration", "engine fuel path"],
+      "Task": ["cold start -20C", "cold start -30C"],
+      "MainPack": "engine precalibration",
+      "MainTask": "cold start -20C",
+      "Comment": "xxx",
+      "A2L": "AL1707DA00.a2l",
+      "HEX": "hex.hex",
+      "Tester": "mei",
+      "UserGroup": "internal",
+      "confName": "DataCfg_ccccc_2020-9-30-11-39-54",
+      "protoolType": "Calibration CAN (APPL)",
+      "BMR": false
+    },
+    "StartRecord": [],
+    "StopRecord": []
+  }]
+}

@@ -12,22 +12,10 @@ function get_load(fileType, protocol, signalArr) {
     CANType,
     odtMaxNum
   } = protocol
-  console.log([ fileType,
-    Baudrate,
-    CANFDBaudrate,
-    MAX_BUS_LOAD,
-    DAQ_MEMORY_LIMIT,
-    DAQ_SIZE,
-    ODT_SIZE,
-    ODT_ENTRY_SIZE,
-    ODT_DAQ_BUFFER_ELEMENT_SIZE,
-    CycleNum,
-    CANType,
-    odtMaxNum])
   // xcp能改baudrate
-  var XCP = 1 //a2l
-  var CCP = 0 //a2l 
-  console.log("please imput 0 or 1 [0:CCP, 1:XCP]\n");
+  // var XCP = 1 //a2l
+  // var CCP = 0 //a2l 
+  // console.log("please imput 0 or 1 [0:CCP, 1:XCP]\n");
 
 
   if (fileType == 'xcp') {
@@ -74,11 +62,10 @@ function get_load(fileType, protocol, signalArr) {
     var busload0 = getBusload(CANType, CycleNum[0], odtNum0, Baudrate, MAX_BUS_LOAD, CANFDBaudrate);
     var busload1 = getBusload(CANType, CycleNum[1], odtNum1, Baudrate, MAX_BUS_LOAD, CANFDBaudrate);
     var busload2 = getBusload(CANType, CycleNum[2], odtNum2, Baudrate, MAX_BUS_LOAD, CANFDBaudrate);
-    console.log(busload0);
-    console.log(busload1);
-    console.log(busload2);
+    console.log('busload0', busload0);
+    console.log('busload1', busload1);
+    console.log('busload2', busload2);
     var busload = busload0 + busload1 + busload2
-    console.log("busload: %f odtNum:%d\n", busload, odtNum);
     var odtNum_1st_channel = odtNum0;
     var odtNum_2st_channel = odtNum1;
     var firstPID_1st_channel = 0;
@@ -93,19 +80,14 @@ function get_load(fileType, protocol, signalArr) {
         daqNum++
       }
     })
-    // console.log('daqNum',daqNum);
-    // console.log('DAQ_SIZE',DAQ_SIZE);
-    // console.log('odtNum',odtNum);
-    // console.log('ODT_SIZE',ODT_SIZE);
-    // console.log(' varNum', varNum);
-    // console.log('ODT_ENTRY_SIZE',ODT_ENTRY_SIZE);
-    // console.log('ODT_DAQ_BUFFER_ELEMENT_SIZE',ODT_DAQ_BUFFER_ELEMENT_SIZE);
-    // console.log('DAQ_MEMORY_LIMIT',DAQ_MEMORY_LIMIT);
-    // console.log('varSizeSUM',varSizeSUM);
+    console.log("daqNum:", daqNum, "DAQ_SIZE:", DAQ_SIZE, "odtNum:", odtNum,
+     "ODT_SIZE:", ODT_SIZE, "varNum:", varNum, "ODT_ENTRY_SIZE:", ODT_ENTRY_SIZE,
+      "varSizeSUM:", varSizeSUM, "ODT_DAQ_BUFFER_ELEMENT_SIZE:", ODT_DAQ_BUFFER_ELEMENT_SIZE,
+       "DAQ_MEMORY_LIMIT:", DAQ_MEMORY_LIMIT);
 
 
     var memoryLoad = (daqNum * DAQ_SIZE + odtNum * ODT_SIZE + varNum * ODT_ENTRY_SIZE + (varSizeSUM + odtNum) * ODT_DAQ_BUFFER_ELEMENT_SIZE) / (DAQ_MEMORY_LIMIT * 1.0);
-    console.log('return', [busload, memoryLoad, firstPID, measurement]);
+    console.log("busload:", busload, "memoryLoad:", memoryLoad, "firstPID:", firstPID, "measurement:", measurement);
     return [busload, memoryLoad, firstPID, measurement]
 
   } else {
@@ -132,7 +114,7 @@ function get_load(fileType, protocol, signalArr) {
       var ccp_load0 = varSizeSUM0 / (odtMaxNum[0] * 7.0);
       var ccp_load1 = varSizeSUM1 / (odtMaxNum[1] * 7.0);
       var ccp_load2 = varSizeSUM2 / (odtMaxNum[2] * 7.0);
-      console.log("return:", [ccp_load0, ccp_load1, ccp_load2, measurement]);
+      console.log("ccp_load0:", ccp_load0, "ccp_load1:", ccp_load1, "ccp_load1:", ccp_load1, "measurement:", measurement);
       return [ccp_load0, ccp_load1, ccp_load2, measurement]
     }
   }
@@ -143,7 +125,7 @@ function optmizeVar(var_old, varNum) {
     return b.size - a.size
   })
   var new_ = var_old;
-  console.log(new_);
+  // console.log(new_);
 
   if (varNum != 0) {
     var arr = [
@@ -182,10 +164,10 @@ function optmizeVar(var_old, varNum) {
     //   arr.push([new_[i].name])
     // }
   }
-  console.log('结束')
+  // console.log('结束')
 
 
-  console.log([new_, odt, arr])
+  console.log(["new_:", new_, "odt:", odt, "arr:", arr])
 
   return [new_, odt.length, arr];
 }
@@ -195,7 +177,7 @@ function getBusload(CANType, CycleNum, odtNum, Baudrate, MAX_BUS_LOAD, CANFDBaud
   if (0 == CANType) //can
   {
     console.log('CAN');
-    console.log([CANType, CycleNum, odtNum, Baudrate, MAX_BUS_LOAD]);
+    console.log("CANType:", CANType, "CycleNum:", CycleNum, "odtNum:", odtNum, "Baudrate:", Baudrate, "MAX_BUS_LOAD:", MAX_BUS_LOAD, "CANFDBaudrate:", CANFDBaudrate);
     var odtBitLen = 120;
     busload = ((odtNum / CycleNum) * odtBitLen * 100) / (Baudrate * MAX_BUS_LOAD);
   } else {
@@ -206,13 +188,14 @@ function getBusload(CANType, CycleNum, odtNum, Baudrate, MAX_BUS_LOAD, CANFDBaud
       var arbitrationField_bitLen = 108;
       var dataField_bitLen = 28;
       // var CANFDBaudrate=2000000;
-      console.log('odtNum',odtNum);
+
+      console.log('odtNum', odtNum);
       console.log('CycleNum', CycleNum);
-      console.log('arbitrationField_bitLen',arbitrationField_bitLen);
-      console.log('CANFDBaudrate',CANFDBaudrate);
-      console.log('dataField_bitLen',dataField_bitLen);
-      console.log('Baudrate',Baudrate);
-      console.log('MAX_BUS_LOAD',MAX_BUS_LOAD);
+      console.log('arbitrationField_bitLen', arbitrationField_bitLen);
+      console.log('CANFDBaudrate', CANFDBaudrate);
+      console.log('dataField_bitLen', dataField_bitLen);
+      console.log('Baudrate', Baudrate);
+      console.log('MAX_BUS_LOAD', MAX_BUS_LOAD);
       busload = ((((odtNum / CycleNum) * arbitrationField_bitLen) / CANFDBaudrate + ((odtNum / CycleNum) * dataField_bitLen) / Baudrate) * 100) / MAX_BUS_LOAD;
     }
   }

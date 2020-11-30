@@ -8,10 +8,11 @@
           v-for="(value, name, index) in typeObj"
           :key="index"
         >
-          <p style="font-size:18px;color:#247dd8">{{name}}</p>
+          <p style="font-size:18px;color:#247dd8;margin:1em 0">{{name}}</p>
           <div
             v-for="(cvalue,cname,cindex) in value"
             :key="cindex"
+            style="margin:0"
           >
             <el-link
               type="info"
@@ -169,8 +170,9 @@
         var data = this.$refs.index.selectedTableData;
         var arr = [];
         data.forEach((item, index) => {
-          arr.push(item.fileName);
+          arr.push(item.filename);
         });
+        // console.log();
         console.log(arr);
         this.selectedTableData = arr;
         this.selectedFile = this.selectedTableData[0];
@@ -186,24 +188,24 @@
 
         this.$http
           .post(
-            "http://dev-api-iot.uaes.com/uaes-intelligent-calibration/v1/wc/hbase/selectHbase",
+            "http://47.116.135.144:30002/ina-urcs/common/v1.0.0/web/loadAnalysisDash",
             {
               fileName: this.selectedFile,
-              type: this.canvasType
+              module: this.canvasType
             },
-            {
-              transformRequest: [
-                data => {
-                  // data 就是你post请求传的值
-                  // 一下主要是吧数据拼接成 类似get格式
-                  let params = "";
-                  for (var index in data) {
-                    params += index + "=" + data[index] + "&";
-                  }
-                  return params;
-                }
-              ]
-            }
+            // {
+            //   transformRequest: [
+            //     data => {
+            //       // data 就是你post请求传的值
+            //       // 一下主要是吧数据拼接成 类似get格式
+            //       let params = "";
+            //       for (var index in data) {
+            //         params += index + "=" + data[index] + "&";
+            //       }
+            //       return params;
+            //     }
+            //   ]
+            // }
           )
           .then(res => {
             console.log(res);
@@ -211,7 +213,7 @@
             this.canvasLoading = false;
 
             if (Object.keys(data).length != 0) {
-              this.plotdata = JSON.parse(data["value"]);
+              this.plotdata = data;
               this.alertShow = false;
             } else {
               this.alertShow = true;

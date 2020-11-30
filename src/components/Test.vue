@@ -1,5 +1,5 @@
 <template>
-  <!-- 辉景 新版-->
+  <!-- 整合版-->
   <div>
     <div v-show="configType==''" class="select" style="margin:0em auto;padding:6em 0;width:1100px;height:100%;">
       <el-row :gutter="12">
@@ -55,8 +55,8 @@
               <el-form-item label="车号">
                 <span>{{ props.row.vehId }}</span>
               </el-form-item>
-              <!-- <el-form-item label="uid">
-                <span>{{ props.row.uid }}</span>
+              <!-- <el-form-item label="cfgjsonId">
+                <span>{{ props.row.cfgjsonId }}</span>
               </el-form-item> -->
             </el-form>
           </template>
@@ -76,7 +76,8 @@
           <template slot-scope="scope">
             <!-- @click="handleDelete(scope.$index, scope.row)" -->
             <el-button size="mini" type="danger" @click="deleteHistroyJson(scope.$index, scope.row)">删除</el-button>
-            <el-button size="mini" type="primary" @click="modifyHistroyJson(scope.$index, scope.row)">重加载</el-button>
+            <el-button size="mini" type="primary" @click="downloadHistroyLab(scope.$index, scope.row)">下载lab</el-button>
+            <!-- <el-button size="mini" type="primary" @click="modifyHistroyJson(scope.$index, scope.row)">重加载</el-button> -->
             <el-button size="mini" type="success" @click="sendHistroyJson(scope.$index, scope.row)">选择</el-button>
           </template>
         </el-table-column>
@@ -111,6 +112,24 @@
           <!-- description="发送测量配置" -->
         </el-steps>
       </div>
+      <el-dialog title="请选择protoolType" :close-on-click-modal="false" :visible.sync="protoolDialog" width="20%">
+        <!-- <p style="margin:0 0 1em 0">请选择</p> -->
+        <!-- @change="daqChange()" -->
+        <el-radio-group v-model="daqRadio" @change="daqChange()">
+          <div style="margin:0.8em 0" v-for="(item,index) in daq_configArr" :key="item.protoolType">
+            <el-radio :label="index">{{item.protoolType}}</el-radio>
+
+            <br>
+
+          </div>
+
+        </el-radio-group>
+
+        <span slot="footer" class="dialog-footer">
+          <!-- <el-button @click="protoolDialog = false">取 消</el-button> -->
+          <el-button type="primary" @click="protoolDialog = false">确 定</el-button>
+        </span>
+      </el-dialog>
 
       <el-dialog title="提交进度" :close-on-click-modal="false" :visible.sync="dialogVisible" width="20%">
         <p style="margin:0 0 1em 0" v-show="a2lPercent<100">当前进度为:</p>
@@ -119,7 +138,7 @@
           <div v-loading="true" style="width:2em;height:2em;display:inline-block;margin:0 1em"></div>
 
         </div>
- 
+
         <el-progress v-show="a2lPercent<100" :color="customColorMethod" :text-inside="true" :stroke-width="24"
           :percentage="a2lPercent">
         </el-progress>
@@ -182,60 +201,72 @@
             :disabled="true">
           </el-input>
           <el-button size="small" type="success" @click="submitDbc(0)" :disabled="this.dbcChannel==1">上传文件
-          </el-button>
+          </el-button>  
         </div> -->
+
         <div class="submit">
+          <div style="margin-bottom:0.8em">
+            <el-radio-group v-model="canRadio">
+              <el-radio label="ECU">calibration can(ECU)</el-radio>
+              <!-- 对应calibration  ccp 0-->
+              <el-radio label="OBD">vehicle can(OBD)</el-radio>
+              <!-- 对应VEH  ccp 2-->
 
-          <p style="color:#666">channel 1(建议连ECU):</p>
+            </el-radio-group>
+
+          </div>
+          <!-- <p style="color:#666">channel 1(建议连ECU):</p> -->
           <div style="margin:0.25em 0">
-            <el-button @click="transA2l(0)" type="primary" size="small" :disabled="this.a2lChannel==1">选择A2L
+            <el-button @click="transA2l()" type="primary" size="small">选择A2L
             </el-button>
-            <input v-show="false" accept=".a2l" ref="filea2l0" type="file" @change="A2lName($event,0)" />
-            <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择a2l文件" v-model="locationA2l0"
+            <input v-show="false" accept=".a2l" ref="filea2l" type="file" @change="A2lName($event)" />
+            <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择a2l文件" v-model="locationA2l"
               :disabled="true">
-              <i slot="suffix" class="el-input__icon el-icon-check" style="color:green"
-                v-show="this.a2lChannel==0&&this.submitList.includes('a2l')"></i>
+              <!-- <i slot="suffix" class="el-input__icon el-icon-check" style="color:green"
+                v-show="this.a2lChannel==0&&this.submitList.includes('a2l')"></i> -->
             </el-input>
-            <el-button @click="submitA2l(0)" size="small" type="success" :disabled="this.a2lChannel==1">上传文件
+            <el-button @click="submitA2l()" size="small" type="success">上传文件
             </el-button>
           </div>
           <div style="margin:0.25em 0">
-            <el-button @click="transHex(0)" type="primary" size="small" :disabled="this.a2lChannel==1">选择hex
+            <el-button @click="transHex()" type="primary" size="small">选择hex
             </el-button>
-            <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择hex文件" v-model="locationHex0"
+            <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择hex文件" v-model="locationHex"
               :disabled="true">
             </el-input>
-            <input v-show="false" ref="filehex0" type="file" @change="hexName($event,0)" accept=".hex" />
+            <input v-show="false" ref="filehex" type="file" @change="hexName($event)" accept=".hex" />
           </div>
           <div style="margin:0.25em 0">
-            <el-button @click="transLab(0)" type="primary" size="small" :disabled="this.a2lChannel==1">选择lab
+            <el-button @click="transLab()" type="primary" size="small">选择lab
 
             </el-button>
-            <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择lab文件" v-model="locationLab0"
+            <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择lab文件" v-model="locationLab"
               :disabled="true">
               <i slot="suffix" class="el-input__icon el-icon-check" style="color:green"
                 v-show="this.labIconIndex==0"></i>
             </el-input>
-            <input v-show="false" accept=".lab" ref="filelab0" type="file" @change="labName($event,0)" />
-            <el-button @click="submitLab(0)" size="small" type="success" :disabled="this.a2lChannel==1">上传文件
+            <input v-show="false" accept=".lab" ref="filelab" type="file" @change="labName($event)" />
+            <el-button @click="submitLab()" size="small" type="success">上传文件
             </el-button>
           </div>
+        </div>
+        <el-divider></el-divider>
+        <div class="submit">
           <div style="margin:0.25em 0">
-            <el-button @click="tranDbc(0)" type="primary" size="small" :disabled="this.dbcChannel==1">选择dbc
+            <el-button @click="tranDbc()" type="primary" size="small">选择dbc
             </el-button>
-            <input v-show="false" ref="filedbc0" type="file" @change="DbcName($event,0)" accept=".dbc" />
-            <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择dbc文件" v-model="locationDbc0"
+            <input v-show="false" ref="filedbc" type="file" @change="DbcName($event)" accept=".dbc" />
+            <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择dbc文件" v-model="locationDbc"
               :disabled="true">
-              <i slot="suffix" class="el-input__icon el-icon-check" style="color:green"
-                v-show="this.dbcChannel==0&&this.submitList.includes('dbc')"></i>
+              <!-- <i slot="suffix" class="el-input__icon el-icon-check" style="color:green"
+                v-show="this.dbcChannel==0&&this.submitList.includes('dbc')"></i> -->
             </el-input>
-            <el-button size="small" type="success" @click="submitDbc(0)" :disabled="this.dbcChannel==1">上传文件
+            <el-button size="small" type="success" @click="submitDbc()">上传文件
             </el-button>
           </div>
 
         </div>
-        <div class="submit">
-
+        <!-- <div class="submit">
           <p style="color:#666">channel 2(建议连DBC):</p>
           <div style="margin:0.25em 0">
             <el-button @click="transA2l(1)" type="primary" size="small" :disabled="this.a2lChannel==0">选择A2L
@@ -284,43 +315,7 @@
           </div>
 
         </div>
-
-        <!-- <div class="submit">
-
-        
-          <p style="color:#666">channel 2(建议连DBC):</p>
-
-          <el-dropdown :class="{dropdownDisabled:this.a2lChannel==0}" @click="transA2l(1)" @command="handleCommand1"
-            type="primary" size="small" split-button>
-            选择A2L
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="a">upload lab</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
-          <input v-show="false" accept=".a2l" ref="filea2l1" type="file" @change="A2lName($event,1)" />
-          <input v-show="false" accept=".lab" ref="filelab1" type="file" @change="labName($event,1)" />
-          <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择a2l文件" v-model="locationA2l1"
-            :disabled="true">
-          </el-input>
-          <el-button @click="submitA2l(1)" size="small" type="success" :disabled="this.a2lChannel==0">上传文件
-          </el-button>
-          <el-tooltip class="item" effect="dark" :disabled="locationHex1==''" :content="locationHex1" placement="top">
-            <el-button @click="transHex(1)" type="primary" size="small" :disabled="this.a2lChannel==0">选择hex
-            </el-button>
-          </el-tooltip>
-
-          <input v-show="false" ref="filehex1" type="file" @change="hexName($event,1)" accept=".hex" />
-          <el-divider direction="vertical"></el-divider>
-
-          <el-button @click="tranDbc(1)" type="primary" size="small" :disabled="this.dbcChannel==0">选择dbc
-          </el-button>
-          <input v-show="false" ref="filedbc1" type="file" @change="DbcName($event,1)" accept=".dbc" />
-          <el-input size="small" style="width:220px;cursor:pointer" placeholder="请选择dbc文件" v-model="locationDbc1"
-            :disabled="true">
-          </el-input>
-          <el-button size="small" type="success" @click="submitDbc(1)" :disabled="this.dbcChannel==0">上传文件
-          </el-button>
-        </div> -->
+ -->
 
       </div>
       <div v-show="step==1">
@@ -345,7 +340,8 @@
               <el-col :span="18">
                 <span>baudrate:</span>
                 <!-- :disabled="fileType=='ccp'" -->
-                <el-select size="small" style="width:120px;margin-right:0.5em" v-model="baudRate" placeholder="请选择">
+                <el-select size="small" style="width:120px;margin-right:0.5em" :disabled="this.fileType=='xcp'"
+                  v-model="baudRate" placeholder="请选择">
 
                   <el-option label="500Kbs" :value="500000"> </el-option>
                   <el-option label="1000Kbs" :value="1000000"> </el-option>
@@ -353,8 +349,10 @@
                 <el-checkbox v-model="BMRchecked">记录原始报文</el-checkbox>
                 <div style="float:right">
                   <el-button size="small" @click="saveLabBox()" type="info">Save Lab</el-button>
-                  <el-button size="small" @click="showAllSignal()" type="info">Show All</el-button>
-                  <el-button size="small" type="info" @click="showSelectedSignal()">Show Selected</el-button>
+                  <el-button size="small" @click="showAllSignal()" :type="activeButton=='showall'?'primary':'info'">Show
+                    All</el-button>
+                  <el-button size="small" @click="showSelectedSignal()"
+                    :type="activeButton=='showselected'?'primary':'info'">Show Selected</el-button>
                   <el-button size="small" @click="clearSelectedSignal()" type="info">Clear Selected</el-button>
 
                 </div>
@@ -366,10 +364,11 @@
                     </template>
                     <template slot-scope="scope">{{ scope.row.signalName }}</template>
                   </el-table-column>
-                  <el-table-column label="synchronous">
+                  <el-table-column label="segement">
                     <template slot="header" slot-scope="scope">
                       <el-checkbox v-model="syncAllmodel"></el-checkbox>
-                      <span>synchronous</span>
+                      <span>{{daq_config.CycleTime[0]||'segment'}}</span>
+
                     </template>
 
                     <template slot-scope="scope">
@@ -379,7 +378,8 @@
                   <el-table-column label="10ms">
                     <template slot="header" slot-scope="scope">
                       <el-checkbox v-model="Allmodel10ms"></el-checkbox>
-                      <span>10ms</span>
+                      <span>{{daq_config.CycleTime[1]||'10ms'}}</span>
+
                     </template>
                     <template slot-scope="scope">
                       <el-checkbox @change="change10ms(scope.$index)" v-model="scope.row['10ms']"></el-checkbox>
@@ -388,7 +388,8 @@
                   <el-table-column label="100ms">
                     <template slot="header" slot-scope="scope">
                       <el-checkbox v-model="Allmodel100ms"></el-checkbox>
-                      <span>100ms</span>
+                      <span>{{daq_config.CycleTime[2]||'100ms'}}</span>
+
                     </template>
                     <template slot-scope="scope">
                       <el-checkbox @change="change100ms(scope.$index)" v-model="scope.row['100ms']"></el-checkbox>
@@ -396,8 +397,7 @@
                   </el-table-column>
                 </el-table>
                 <my-page ref="page" :tableData.sync="tableDataSignal" :result="resultSignal"></my-page>
-                <span
-                  style="color:#999;font-size:13px;float:right;height:32px;line-height:32px">{{a2lChannel==0?locationA2l0:locationA2l1}}</span>
+                <span style="color:#999;font-size:13px;float:right;height:32px;line-height:32px">{{locationA2l}}</span>
 
               </el-col>
             </el-row>
@@ -425,16 +425,17 @@
               <div class="el-notification__content" style="width:240px">
                 <!-- xcp -->
 
-                <h4 style="margin:0">busload:</h4>
-                <el-progress :percentage="busload_per" :color="customColors"></el-progress>
                 <!-- <el-progress v-else :percentage="busload_per" :color="customColors"></el-progress> -->
                 <div v-show="fileType=='xcp'">
+                  <h4 style="margin:0">busload:</h4>
+
+                  <el-progress :percentage="busload_per" :color="customColors"></el-progress>
 
                   <h4 style="margin:0">channel_load:</h4>
                   <el-progress :percentage="channel_per" :color="customColors"></el-progress>
                 </div>
                 <div v-show="fileType=='ccp'">
-                  <h4 style="margin:0">synchronous:</h4>
+                  <h4 style="margin:0">segment:</h4>
                   <el-progress :percentage="channel0_per" :color="customColors"></el-progress>
                   <h4 style="margin:0">10 ms:</h4>
                   <el-progress :percentage="channel1_per" :color="customColors"></el-progress>
@@ -452,11 +453,17 @@
 
         <!-- v-show="submitType=='dbc'" -->
         <div v-show="signalStep==1">
+          <span style="margin-right:3em">position:</span>
+          <span style="label">大于：</span>
+          <el-input size="medium" style="width:100px" v-model="positionmin"></el-input>
+          <span style="label">小于：</span>
+          <el-input size="medium" style="width:100px" v-model="positionmax"></el-input>
+          <el-button size="medium" type="primary" @click="positionMap">筛选</el-button>
           <el-table :data="tableDataDbc" tooltip-effect="dark" style="width: 100%"
             @selection-change="handleSelectionChange" row-key="Name">
             <el-table-column type="selection" width="55" :reserve-selection="true">
             </el-table-column>
-            <el-table-column prop="Name2" width="250" label="信号名">
+            <el-table-column prop="Name2" width="230" label="信号名">
               <template slot="header" slot-scope="scope">
                 <span style="margin-right:1em"> Name</span>
                 <el-input style="width:150px" v-model="searchTableDbc" size="mini" placeholder="输入关键字搜索" />
@@ -480,10 +487,10 @@
 
             </el-table-column>
 
-            <!-- <el-table-column prop="BitLen" label="BitLen">
-            </el-table-column> -->
-            <!-- <el-table-column prop="ByteOrder" label="ByteOrder">
-            </el-table-column> -->
+            <el-table-column prop="BitLen" label="BitLen">
+            </el-table-column>
+            <el-table-column prop="ByteOrder" label="ByteOrder">
+            </el-table-column>
             <el-table-column prop="Offset" label="偏移量（offset）">
               <template slot-scope="scope">
                 <span v-if="!scope.row.editShow"> {{ scope.row.Offset }}
@@ -496,8 +503,8 @@
               </template>
 
             </el-table-column>
-            <!-- <el-table-column prop="Position" label="Position">
-            </el-table-column> -->
+            <el-table-column prop="Position" label="Position">
+            </el-table-column>
             <el-table-column prop="Scale" label="放大系数（scale）">
               <template slot-scope="scope">
                 <span v-if="!scope.row.editShow"> {{ scope.row.Scale }}
@@ -533,8 +540,7 @@
 
           </el-table>
           <my-page ref="pagedbc" :tableData.sync="tableDataDbc" :result="resultDbc"></my-page>
-          <span
-            style="color:#999;font-size:13px;float:right;height:32px;line-height:32px">{{dbcChannel==0?locationDbc0:locationDbc1}}</span>
+          <span style="color:#999;font-size:13px;float:right;height:32px;line-height:32px">{{locationDbc}}</span>
 
         </div>
 
@@ -595,6 +601,8 @@
 
           <el-input placeholder="请输入车号" style="width:200px" v-model="vehId" clearable>
           </el-input>
+          <el-switch style="margin-left:2em" v-model="addStart" active-text="add start/stop">
+          </el-switch>
 
         </div>
 
@@ -608,6 +616,8 @@
         </el-input>
 
         <el-button type="primary" :loading="submitLoading" @click="submitImg()" style="float:right">提交</el-button>
+        <!-- <el-button type="primary" :disabled="jsonButtonDisabled" @click="jsonFile()"
+          style="float:right;margin-right:1em">下载JSON</el-button> -->
 
       </div>
       <div class="step3" v-show="step==3">
@@ -629,15 +639,15 @@
             <el-table-column label="车号" prop="vehId">
             </el-table-column>
             <!-- <el-table-column
-              label="uid"
-              prop="uid"
+              label="cfgjsonId"
+              prop="cfgjsonId"
             >
             </el-table-column> -->
           </el-table>
 
           <h3>可用记录仪:</h3>
           <el-row :gutter="20">
-            <el-col :span="6" v-for="(item, index) in boxData" :key="index">
+            <el-col :span="6" v-for="(item, index) in boxData" :key="index" style="margin:0.5em 0">
               <el-card :body-style="{ padding: '0px' }">
 
                 <div style="padding: 14px;">
@@ -666,6 +676,8 @@ import mypage from "./Page.vue";
 import Box from "./Box.vue";
 import { get_load_PID } from "@/assets/getloadpid.js";
 import { get_load_ccp } from "@/assets/getloadccp.js";
+import { get_load } from "@/assets/xcp_ccp_test.js";
+import "@/../static/FileSaver.min.js";
 
 export default {
   directives: {
@@ -702,6 +714,7 @@ export default {
   },
   data() {
     return {
+      canRadio: "ECU",
       scrollTop: 0, //
       applicationLab: [], //从url接收的lab
       configType: "", //控制历史配置文件和新建配置文件页面的显示
@@ -721,35 +734,44 @@ export default {
       channel: 0,
       dialogVisible: false,
       a2lPercent: 0,
-      locationDbc0: "",
-      locationA2l0: "",
-      locationHex0: "",
-      locationDbc1: "",
-      locationA2l1: "",
-      locationHex1: "",
-      locationLab0: "",
-      locationLab1: "",
+      activeButton: "",
+      locationDbc: "",
+      locationA2l: "",
+      locationHex: "",
+      // locationDbc: "",
+      // locationA2l: "",
+      // locationHex: "",
+      // locationLab: "",
+      locationLab: "",
+      daqRadio: 0,
 
       funcSearch: "",
       boxData: [],
 
       AllFuncItem: [], //所有function
       funcItem: [], //过滤后的function
-      uid: "",
+      a2lId: "",
       allSignalObj: {}, //1.为了点击全部数据时而保留的signal表格所有数据  2.为了计算byte
+      bk: "",
+      bkresult: "",
       func_signal: {}, //function signal 对应关系 用于选择func 展示用
       lab_signal: {}, //lab signal 对应关系 用于选择lab 展示用
       baudRate: 500000,
       BMRchecked: false,
       searchTableVal: "",
       searchTableDbc: "",
-      dbcChannel: 2, //dbc在哪个通道
+      dbcChannel: 1, //dbc在哪个通道
       a2lChannel: 2, //a2l在哪个通道
       submitList: [], //已上传的文件类型(dbc,a2l)
-      submitType: "a2l", //控制a2l还是dbc表格 显示
+      // submitType: "a2l", //控制a2l还是dbc表格 显示
       fileType: "",
-      daq_config: {}, //用于计算进度 和  最后传递json时需要
+      daq_configArr: [], //
+      daq_config: { CycleTime: [] }, //类似于protocol 上传完A2L后弹出窗口 4选1
+
+      protoolDialog: false,
+
       FirstPID: [],
+      Measurement: [],
       allresultSignal: [], //signalName搜索框过滤前的signal表格数据
       resultSignal: [], //signalname搜索框过滤后的signal表格数据 -->给page使用
       tableDataSignal: [], //单页signal表格数据
@@ -799,14 +821,19 @@ export default {
       package: [],
       translate: [],
       task: [],
+      addStart: false,
 
       packageSelected: [],
       mainPackageIndex: 0,
       taskSelected: [],
       mainTaskIndex: 0,
-      jsonuid: "", //json的uid
+      cfgjsonId: "", //json id
       downloadLabName: "",
       labIconIndex: 2,
+      jsonButtonDisabled: true,
+      jsonFileData: {},
+      positionmax: "",
+      positionmin: "",
     };
   },
   created() {
@@ -830,7 +857,7 @@ export default {
 
     //  if (val == 1 && this.step1flag) {
 
-    this.$http.get("/admin/getProjectID").then((res) => {
+    this.$http.get("/BorrowingManagement/getProjectID").then((res) => {
       console.log(res);
       var arr = [];
       res.data.projectIDList.forEach((item, index) => {
@@ -838,13 +865,13 @@ export default {
       });
       this.projectNumberData = arr;
     });
-    this.$http.get("/admin/getPackage").then((res) => {
+    this.$http.get("/BorrowingManagement/getPackage").then((res) => {
       console.log(res);
       this.package = res.data.package;
       this.translate = res.data.translate;
     });
 
-    this.$http.get("/admin/getTask").then((res) => {
+    this.$http.get("/BorrowingManagement/getTask").then((res) => {
       console.log(res);
       this.task = res.data.task;
     });
@@ -947,6 +974,36 @@ export default {
     // ];
   },
   methods: {
+    positionMap() {
+      this.resultDbc = this.allresultDbc.filter((data) => {
+        var max = Number(this.positionmax);
+        var min = Number(this.positionmin);
+        var p = data.Position;
+        if (max && min) {
+          return p <= max && p >= min;
+        } else if (max && !min) {
+          return p <= max;
+        } else if (!max && min) {
+          return p >= min;
+        } else {
+          return true;
+        }
+
+        // if()
+        // return Number(data.Position)>Number()this.positionmin&&Number(data.Position)<this.positionmax
+      });
+    },
+    findIndexByKeyValue(arraytosearch) {
+      for (var i = 0; i < arraytosearch.length; i++) {
+        if (
+          arraytosearch[i]["name"] == "B_kl15" ||
+          arraytosearch[i]["name"] == "B_kl15_msg"
+        ) {
+          return arraytosearch[i]["name"];
+        }
+      }
+      return false;
+    },
     //返回
     returnMainPage() {
       var projectNumberData = this.projectNumberData;
@@ -964,8 +1021,9 @@ export default {
     historyJson() {
       this.jsonTableLoading = true;
       this.configType = "history";
-      this.$http.post("/test/getAllJson", { PA: this.username }).then((res) => {
-        // console.log(res);
+      // /test/getAllJson
+      this.$http.post("/ec/getMyCfg", { PA: this.username }).then((res) => {
+        console.log(res);
         var { res, data, detail } = res.data;
         this.jsonTableLoading = false;
 
@@ -982,7 +1040,7 @@ export default {
     //新建JSON
     buildJson() {
       this.configType = "build";
-      this.jsonuid = "";
+      this.cfgjsonId = "";
       this.sendJsonTable = [];
       this.step = 0;
     },
@@ -991,7 +1049,7 @@ export default {
       console.log(row);
       this.sendType = true;
       this.sendJsonTable = [row];
-      this.jsonuid = row.uid;
+      this.cfgjsonId = row.cfgjsonId;
       this.configType = "build";
       this.step = 3;
     },
@@ -1006,8 +1064,8 @@ export default {
       })
         .then(() => {
           this.$http
-            .post("/test/deleteIMG", {
-              jsonuid: row.uid,
+            .post("/ec/deleteIMG", {
+              cfgjsonId: row.cfgjsonId,
             })
             .then((res) => {
               console.log(res);
@@ -1021,7 +1079,7 @@ export default {
                   message: "删除成功!",
                 });
                 this.allresultJson.forEach((value, index, array) => {
-                  if (value.uid == row.uid) {
+                  if (value.cfgjsonId == row.cfgjsonId) {
                     array.splice(index, 1);
                   }
                   return;
@@ -1041,6 +1099,37 @@ export default {
           });
         });
     },
+    //下载历史LAB文件
+    downloadHistroyLab(index, row) {
+      // this.$alert("正在加载数据，请稍等......", "下载lab文件", {
+      //   showCancelButton: false,
+      //   showConfirmButton: false,
+      //   showClose: false,
+      // });
+      this.$http
+        .post(
+          "/ec/getLABfromConfig",
+          {
+            cfgjsonId: row.cfgjsonId,
+          },
+          {
+            responseType: "blob", // 设置响应数据类型
+          }
+        )
+        .then((res) => {
+          console.log(res);
+          let url = window.URL.createObjectURL(new Blob([res.data]));
+          let link = document.createElement("a");
+          let fileName = this.getTime().replace(":", "").replace("-", "");
+
+          // var random = (Math.random() * 100000).toFixed(0);
+          link.style.display = "none";
+          link.href = url;
+          link.setAttribute("download", fileName + ".lab"); // 自定义下载文件名（如exemple.txt）
+          document.body.appendChild(link);
+          link.click();
+        });
+    },
     //修改历史JSON
     modifyHistroyJson(index, row) {
       this.$alert("正在加载数据，请稍等......", "重加载", {
@@ -1055,12 +1144,14 @@ export default {
         //   });
         // }
       });
-      var success = true;
+      // var success = true;
       var baudrate;
       var signal = {};
+
+      // var meta = new Promise((resolve, reject) => {
       this.$http
         .post("/test/jsontoMeta", {
-          jsonuid: row.uid,
+          cfgjsonId: row.cfgjsonId,
         })
         .then((res) => {
           console.log(res);
@@ -1083,6 +1174,8 @@ export default {
               a2lChannel,
               BAUDRATE,
               BMR,
+              canRadio,
+              daqRadio,
             } = data;
             var packagesCN = [];
             var MainPackCN = "";
@@ -1090,7 +1183,7 @@ export default {
 
             for (var item in this.translate) {
               var value = this.translate[item];
-              console.log(value);
+              // console.log(value);
               if (packages.includes(value)) {
                 packagesCN.push(item);
               }
@@ -1107,6 +1200,8 @@ export default {
             this.a2lChannel = a2lChannel;
             // this.dbcChannel = a2lChannel == 0 ? 1 : 0; 暂时还记不住DBC
             this.submitList = ["a2l"]; // 暂时还记不住DBC
+            this.canRadio = canRadio;
+            this.daqRadio = daqRadio;
 
             this.BMRchecked = BMR;
             baudrate = BAUDRATE; //baudrate设置 要在解析A2L之后 (替换)
@@ -1127,8 +1222,8 @@ export default {
             this.mainTaskIndex = tasks.indexOf(mainTask);
             this.jsonName = confName;
             this.comment = comment;
-            this["locationA2l" + this.a2lChannel] = a2lName;
-            this["locationHex" + this.a2lChannel] = hexName;
+            this["locationA2l"] = a2lName;
+            this["locationHex"] = hexName;
 
             console.log(data);
           } else {
@@ -1137,16 +1232,22 @@ export default {
               message: "获取meta信息失败!",
             });
           }
+          // resolve();
+        })
+        .catch((err) => {
+          this.$message({
+            type: "error",
+            message: "获取meta信息失败 !",
+          });
+          // reject();
         });
-      // .catch(err => {
-      //   this.$message({
-      //     type: "error",
-      //     message: "获取meta信息失败 !"
-      //   });
       // });
+
+      // var lab = new Promise((resolve, reject) => {
       this.$http
-        .post("/test/jsontoLab", {
-          jsonuid: row.uid,
+        // /test/jsontoLab
+        .post("/ec/getLABfromConfig", {
+          cfgjsonId: row.cfgjsonId,
         })
         .then((res) => {
           console.log(res);
@@ -1195,6 +1296,7 @@ export default {
               }
             }
             console.log(signal);
+            // resolve();
           } else {
             this.$message({
               type: "error",
@@ -1207,13 +1309,20 @@ export default {
             type: "error",
             message: "获取已选择信号名失败!",
           });
+          // reject();
           // this.$msgbox.close();
         });
+      // });
 
+      // var a2l = new Promise((resolve, reject) => {
       this.$http
-        .post("/test/uidGeta2l", {
-          jsonuid: row.uid,
-        })
+        .post(
+          // "/test/uidGeta2l",
+          "/ec/getA2LfromCfg",
+          {
+            cfgjsonId: row.cfgjsonId,
+          }
+        )
         .then((res) => {
           console.log(res);
           // var status=res.status;
@@ -1222,11 +1331,14 @@ export default {
 
           if (res.data.res == "V") {
             var { data } = res.data;
+            console.log(data);
+            // this.fileType = data.fileType;
+
             //
-            data.daq_config["BAUDRATE"] = baudrate;
-            this.analyA2l(data, this.a2lChannel);
-            //注意：上两行
-            // 此接口时间较长this.a2lChannel已赋值 后续需改进
+            // data.daq_config["BAUDRATE"] = baudrate;
+            this.analyA2l(data);
+            // this.baudrate=baudrate
+            // 此接口时间较长 baudrate已赋值 后续需改进
 
             this.configType = "build";
 
@@ -1236,47 +1348,42 @@ export default {
             } else {
             }
             this.showSelectedSignal();
+            // resolve(data);
           } else {
             this.$message({
               type: "error",
               message: res.data.detail || "获取a2l信息失败",
             });
           }
+
           // console.log(this.selectedSignal)
           // this.selectedSignal = signal;
           // this.showSelectedSignal();
 
           this.$msgbox.close();
+        })
+        .catch((err) => {
+          this.$message({
+            type: "error",
+            message: "获取a2l信息失败.!",
+          });
+          this.$msgbox.close();
+          // reject();
         });
-      // .catch((err) => {
-      //   this.$message({
-      //     type: "error",
-      //     message: "获取a2l信息失败.!",
-      //   });
-      //   this.$msgbox.close();
       // });
+
+      // let result = Promise.all([meta, lab, a2l]);
+      // result.then(
+      //   (data) => {
+      //     console.log("成功");
+
+      //   },
+      //   (err) => {
+      //     console.log("失败" + err); //失败2
+      //   }
+      // );
     },
 
-    axiostest() {
-      // this.$http
-      //   .post("/test/generateAndSendImg", {
-      //     uid: "jsontoIMG-4pSBb-MtSwR-4g7fz-1MxlY-rMsP8",
-      //     sn: "6029"
-      //   })
-      //   .then(res => {
-      //     console.log(res);
-      //   });
-
-      this.$http.post("/test/getAllJson", { PA: this.username }).then((res) => {
-        console.log(res);
-      });
-      //  this.$http
-      //   .post("/test/deleteOneJson",{uid:'jsontoIMG-4pSBb-MtSwR-4g7fz-1MxlY-rMsP8',PA:'li.gao'})
-      //   .then(res => {
-      //     console.log(res);
-
-      //   })
-    },
     getTime: function () {
       var _this = this;
       let yy = new Date().getFullYear();
@@ -1294,20 +1401,20 @@ export default {
       var gettime = yy + "-" + mm + "-" + dd + " " + hh + ":" + mf + ":" + ss;
       return gettime;
     },
-    tranDbc(index) {
-      this.$refs["filedbc" + index].dispatchEvent(new MouseEvent("click"));
+    tranDbc() {
+      this.$refs["filedbc"].dispatchEvent(new MouseEvent("click"));
     },
-    DbcName(e, index) {
-      this["locationDbc" + index] = e.target.files[0]["name"];
+    DbcName(e) {
+      this["locationDbc"] = e.target.files[0]["name"];
     },
-    submitDbc(index) {
-      if (!this.$refs["filedbc" + index].files[0]) {
+    submitDbc() {
+      if (!this.$refs["filedbc"].files[0]) {
         console.log("return");
         return;
       }
       var formData = new FormData();
-      formData.append("file", this.$refs["filedbc" + index].files[0]);
-      formData.append("filename", this.$refs["filedbc" + index].files[0].name);
+      formData.append("dbcFile", this.$refs["filedbc"].files[0]);
+      formData.append("filename", this.$refs["filedbc"].files[0].name);
       this.dialogVisible = true;
 
       var config = {
@@ -1321,18 +1428,19 @@ export default {
       };
 
       this.$http
-        .post("/test/upload/dbcFile", formData, config)
+        .post("/ec/upload/dbcFile", formData, config)
         .then((res) => {
           this.dialogVisible = false;
 
           console.log(res);
           console.log(JSON.stringify(res.data.data));
-          this.dbcChannel = index;
+          // this.dbcChannel = index;
+          this.dbcChannel = 1;
           if (!this.submitList.includes("dbc")) {
             this.submitList.push("dbc");
           }
-          this.a2lChannel = index == 0 ? 1 : 0;
-          this.submitType = "dbc";
+          // this.a2lChannel = index == 0 ? 1 : 0;
+          // this.submitType = "dbc";
           this.basicDbc = res.data.data;
 
           var dbc = [];
@@ -1357,32 +1465,32 @@ export default {
           });
         });
     },
-    transA2l(index) {
-      this.$refs["filea2l" + index].dispatchEvent(new MouseEvent("click"));
+    transA2l() {
+      this.$refs["filea2l"].dispatchEvent(new MouseEvent("click"));
     },
-    A2lName(e, index) {
-      this["locationA2l" + index] = e.target.files[0]["name"];
+    A2lName(e) {
+      this["locationA2l"] = e.target.files[0]["name"];
     },
-    transHex(index) {
-      this.$refs["filehex" + index].dispatchEvent(new MouseEvent("click"));
+    transHex() {
+      this.$refs["filehex"].dispatchEvent(new MouseEvent("click"));
     },
-    hexName(e, index) {
-      this["locationHex" + index] = e.target.files[0]["name"];
+    hexName(e) {
+      this["locationHex"] = e.target.files[0]["name"];
     },
-    transLab(index) {
+    transLab() {
       // console.log(command);
-      this.$refs["filelab" + index].dispatchEvent(new MouseEvent("click"));
+      this.$refs["filelab"].dispatchEvent(new MouseEvent("click"));
     },
     labName(e, index) {
-      this["locationLab" + index] = e.target.files[0]["name"];
+      this["locationLab"] = e.target.files[0]["name"];
     },
-    submitLab(index) {
+    submitLab() {
       this.dialogVisible = true;
 
       var formData = new FormData();
-      formData.append("file", this.$refs["filelab" + index].files[0]);
-      formData.append("filename", this.$refs["filelab" + index].files[0].name);
-      var labItem = this.$refs["filelab" + index].files[0].name;
+      formData.append("labFile", this.$refs["filelab"].files[0]);
+      // formData.append("filename", this.$refs["filelab"].files[0].name);
+      var labItem = this.$refs["filelab"].files[0].name;
       // if (this.labArr.indexOf(labItem) != -1) {
       //   this.$message({
       //     type: "warning",
@@ -1399,7 +1507,7 @@ export default {
         },
       };
       this.$http
-        .post("/test/upload/labFile", formData, config)
+        .post("/ec/upload/labFile", formData, config)
         .then((res) => {
           this.dialogVisible = false;
           console.log(res);
@@ -1439,7 +1547,7 @@ export default {
             if (this.labArr.indexOf(labItem) == -1) {
               this.labArr.push(labItem);
             }
-            this.labIconIndex = index;
+            // this.labIconIndex = index;
 
             // console.log(labItem);
           }
@@ -1454,18 +1562,18 @@ export default {
         });
     },
 
-    submitA2l(index) {
-      if (!this.$refs["filea2l" + index].files[0]) {
+    submitA2l() {
+      if (!this.$refs["filea2l"].files[0]) {
         console.log("return");
         return;
       }
       this.dialogVisible = true;
 
-      console.log(this.$refs["filea2l" + index].files[0]);
+      console.log(this.$refs["filea2l"].files[0]);
 
       var formData = new FormData();
-      formData.append("file", this.$refs["filea2l" + index].files[0]);
-      formData.append("filename", this.$refs["filea2l" + index].files[0].name);
+      formData.append("a2lFile", this.$refs["filea2l"].files[0]);
+      formData.append("filename", this.$refs["filea2l"].files[0].name);
       var config = {
         // headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent) => {
@@ -1474,74 +1582,41 @@ export default {
           this.a2lPercent = Math.floor(complete);
         },
       };
-      this.$http
-        .post("/test/upload/a2lFile", formData, config)
-        .then((res) => {
-          console.log(res);
+      this.$http.post("/ec/upload/a2lFile", formData, config).then((res) => {
+        console.log(res);
 
-          this.dialogVisible = false;
-          var { data, res, detail } = res.data;
-          if (res == "V") {
-            this.analyA2l(data, index);
-          } else {
-            this.$message({
-              type: "error",
-              message: detail || "处理A2L文件失败!",
-            });
+        this.dialogVisible = false;
+        var { data, res, detail } = res.data;
+        if (res == "V") {
+          this.analyA2l(data);
+          if (this.fileType == "xcp") {
+            this.protoolDialog = true;
           }
-        })
-        .catch((res) => {
-          this.dialogVisible = false;
+        } else {
           this.$message({
             type: "error",
-            message: "上传文件失败 !",
+            message: detail || "处理A2L文件失败!",
           });
-        });
-      // $.ajax({url:'/test/upload/a2lFile',data:formData,type:'post',success:function(){
-      //             console.log(data);
+        }
+      });
+      // .catch((res) => {
       //   this.dialogVisible = false;
-      //   this.uid = data.uid;
-      //   this.func_signal = data.func_signal;
-      //   this.fileType = data.fileType;
-      //   this.daq_config = data.daq_config;
-      //   if (this.fileType == "ccp") {
-      //     this.baudRate = data.daq_config["BAUDRATE"];
-      //   }
-
-      //   this.allSignalObj = data.allSignal;
-      //   //this.allSignalObj:1.为了点击全部数据时 而保留的signal表格所有数据  2.为了计算byte
-
-      //   this.allresultSignal = [];
-      //   for (var item in this.allSignalObj) {
-      //     var obj = {
-      //       signalName: item,
-      //       sync: false,
-      //       "10ms": false,
-      //       "100ms": false
-      //     };
-
-      //     this.allresultSignal.push(obj);
-      //   }
-      //   console.log(this.allresultSignal);
-
-      //   this.AllFuncItem = Object.keys(this.func_signal);
-      //   this.funcItem = this.AllFuncItem.filter(
-      //     data =>
-      //       !this.funcSearch ||
-      //       data.toLowerCase().includes(this.funcSearch.toLowerCase())
-      //   );
-
-      // }})
+      //   this.$message({
+      //     type: "error",
+      //     message: "上传文件失败 !",
+      //   });
+      // });
     },
     //计算A2L中的数据 （上传A2L和重加载历史数据会调用）
-    analyA2l(data, index) {
-      this.submitType = "a2l";
+    analyA2l(data) {
+      // this.submitType = "a2l";
 
-      this.a2lChannel = index;
+      // this.a2lChannel = index;
       if (!this.submitList.includes("a2l")) {
         this.submitList.push("a2l");
       }
-      this.dbcChannel = index == 0 ? 1 : 0;
+      // this.dbcChannel = index == 0 ? 1 : 0;
+      // this.dbcChannel=1
 
       // this.a2lChannel = this.channel;
 
@@ -1667,7 +1742,7 @@ export default {
       //   //   BAUDRATE: 500000
       //   // }
       // };
-      this.uid = data.uid;
+      this.a2lId = data.a2lId;
       // this.func_signal = data.func_signal;
       this.selectedSignal = {};
       this.labArr = [];
@@ -1688,23 +1763,63 @@ export default {
       // }
 
       this.func_signal = data.func_signal;
-
+      data.daq_config.forEach((item, index) => {
+        // item.CycleNum = [];
+        var arr = [];
+        item.CycleTime.forEach((value, cindex) => {
+          if (value == "segment") {
+            arr.push(0.004);
+          } else {
+            var num = Number(value.replace(/[^0-9]/gi, "")) / 1000;
+            arr.push(num);
+          }
+        });
+        item.CycleNum = arr;
+      });
       // this.func_signal[]
-
       //    if(this.labArr.length!=0){
       //    this.func_signal.push()
       // }
-
       this.fileType = data.fileType;
-      this.daq_config = data.daq_config;
-      if (this.fileType == "ccp") {
-        this.baudRate = data.daq_config["BAUDRATE"];
+      this.daq_configArr = data.daq_config;
+      if (this.fileType == "xcp") {
+        // this.protoolDialog = true;
+        this.daq_configArr = this.daq_configArr.filter((item, index) => {
+          if (this.canRadio == "OBD") {
+            return item.protoolType.includes("Vehicle");
+          } else {
+            return item.protoolType.includes("Calibration");
+          }
+        });
+        console.log(this.daq_configArr);
       }
+
+      this.daq_config = this.daq_configArr[this.daqRadio];
+      if (this.fileType == "xcp") {
+        this.a2lChannel = this.daq_config.Channel;
+      } else {
+        console.log(this.daq_configArr);
+        if (this.canRadio == "OBD") {
+          this.a2lChannel = 2;
+        } else {
+          this.a2lChannel = 0;
+        }
+      }
+
+      this.baudRate = this.daq_config["Baudrate"];
 
       this.allSignalObj = data.allSignal;
       //this.allSignalObj:1.为了点击全部数据时 而保留的signal表格所有数据  2.为了计算byte
 
       this.allresultSignal = [];
+      //检验bk是否存在 并在没有选择bk时留着备用 a2l不存在bk时  调用all start会报错
+      if (Object.keys(this.allSignalObj).includes("B_kl15")) {
+        this.bk = "B_kl15";
+      } else if (Object.keys(this.allSignalObj).includes("B_kl15_msg")) {
+        this.bk = "B_kl15_msg";
+      } else {
+        this.bk = "";
+      }
       for (var item in this.allSignalObj) {
         var obj = {
           signalName: item,
@@ -1723,6 +1838,15 @@ export default {
           !this.funcSearch ||
           data.toLowerCase().includes(this.funcSearch.toLowerCase())
       );
+    },
+    daqChange() {
+      this.daq_config = this.daq_configArr[this.daqRadio];
+      this.baudRate = this.daq_config.Baudrate;
+      this.a2lChannel = this.daq_config.Channel;
+      console.log(this.daq_config);
+      // this.cycle=JSON.parse(JSON.stringify(this.protocol['CycleTime']))
+
+      // console.log(this.protoRadio);
     },
     //是否启用LAB中的通道
     labFunc(data, x, labItem) {
@@ -1776,7 +1900,7 @@ export default {
           //重复的lab如果包含相同的signalname 已选择的设置将会被覆盖,
         }
         if (x == "then") {
-          this.selectedSignal[sig] = obj;
+          this.$set(this.selectedSignal, sig, obj);
         }
       }
       console.log(sigArr);
@@ -1802,6 +1926,8 @@ export default {
     selectFunc(index, path) {
       console.log(index);
       console.log(this.func_signal[this.funcItem[index]]);
+      this.activeButton = "";
+
       var arr = this.func_signal[this.funcItem[index]];
       this.allresultSignal = [];
       arr.forEach((item, index) => {
@@ -1937,7 +2063,7 @@ export default {
         var val = "";
         if (value["10ms"]) {
           val = "10ms";
-        } else if (value["10ms"]) {
+        } else if (value["100ms"]) {
           val = "100ms";
         } else if (value["sync"]) {
           val = "sync";
@@ -1947,7 +2073,7 @@ export default {
       var labObj = { signals: obj, labname: "mylab" };
       console.log(labObj);
       this.$http
-        .post("/test/downloadLab", labObj, {
+        .post("/ec/download/Lab", labObj, {
           responseType: "blob", // 设置响应数据类型
         })
         .then((res) => {
@@ -1974,6 +2100,9 @@ export default {
         });
     },
     showAllSignal() {
+      if (this.allresultSignal.length != 0) {
+        this.activeButton = "showall";
+      }
       this.allresultSignal = [];
       for (var item in this.allSignalObj) {
         var obj = {
@@ -1987,7 +2116,12 @@ export default {
       }
       this.allresultSignal.forEach((item, index) => {
         if (Object.keys(this.selectedSignal).includes(item.signalName)) {
-          this.allresultSignal[index] = this.selectedSignal[item.signalName];
+          // this.allresultSignal[index] = this.selectedSignal[item.signalName];
+          this.$set(
+            this.allresultSignal,
+            index,
+            this.selectedSignal[item.signalName]
+          );
         }
       });
       console.log(this.allresultSignal);
@@ -1995,6 +2129,10 @@ export default {
     showSelectedSignal() {
       console.log(this.selectedSignal);
       console.log(JSON.stringify(this.selectedSignal));
+      if (this.allresultSignal.length != 0) {
+        this.activeButton = "showselected";
+      }
+
       this.allresultSignal = Object.values(this.selectedSignal);
     },
     clearSelectedSignal() {
@@ -2015,61 +2153,83 @@ export default {
 
     //计算进度条占比
     calculationPro() {
-      var variable_size_channel_0 = [];
-      var variable_size_channel_1 = [];
-      var variable_size_channel_2 = [];
+      var signalArr = [[], [], []];
       // this.selectedSignal
-      Object.keys(this.selectedSignal).forEach((item, index) => {
+      var arr = Object.keys(this.selectedSignal);
+      arr.forEach((item, index) => {
         if (this.selectedSignal[item]["sync"]) {
-          variable_size_channel_0.push(this.allSignalObj[item]);
+          signalArr[0].push({
+            size: this.allSignalObj[item],
+            name: item,
+          });
         } else if (this.selectedSignal[item]["10ms"]) {
-          variable_size_channel_1.push(this.allSignalObj[item]);
+          signalArr[1].push({
+            size: this.allSignalObj[item],
+            name: item,
+          });
         } else if (this.selectedSignal[item]["100ms"]) {
-          variable_size_channel_2.push(this.allSignalObj[item]);
+          signalArr[2].push({
+            size: this.allSignalObj[item],
+            name: item,
+          });
         }
       });
-      if (this.fileType == "xcp") {
-        // this.daq_config.baudrate = this.baudRate; //取设定的baudrate
-        if (this.baudRate == 500000) {
-          var daq_config = this.daq_config[0];
-          daq_config.baudrate = this.baudRate;
-        } else {
-          var daq_config = this.daq_config[1];
-          daq_config.baudrate = this.baudRate;
+      // var flag = false;
+      // if (bk == "B_kl15") {
+      if (arr.length != 0) {
+        var result0 = this.findIndexByKeyValue(signalArr[0]);
+        var result1 = this.findIndexByKeyValue(signalArr[1]);
+        var result2 = this.findIndexByKeyValue(signalArr[2]);
+        console.log("result", result0, result1, result2);
+        if (result2) {
+          this.bkresult = result2;
+        } else if (result0) {
+          signalArr[0] = signalArr[0].filter((value) => {
+            return value.name != result0;
+          });
+          signalArr[1].push({
+            size: 1,
+            name: result0,
+          });
+          this.bkresult = result0;
+        } else if (result1) {
+          this.bkresult = result1;
         }
-        console.log(daq_config);
+        //   else if (result2) {
+        //   this.bkresult = result2;
+        // }
+        else {
+          signalArr[1].push({
+            size: 1,
+            name: this.bk,
+          });
+          this.bkresult = this.bk;
+        }
+        // if (flag) {
+        //   signalArr[1].push({
+        //     size: 1,
+        //     name: flag,
+        //   });
+        // }
+        console.log("signalArr", signalArr);
+      }
 
-        var progressArr = get_load_PID(
-          variable_size_channel_0,
-          variable_size_channel_1,
-          variable_size_channel_2,
-          daq_config
-        );
-        if (this.baudRate == 500000) {
-          progressArr[0] = (progressArr[0] * 100) / 20;
-        } else {
-          progressArr[0] = (progressArr[0] * 100) / 80;
-        }
-        console.log(progressArr);
-        this.busload_per = Math.floor(progressArr[0] * 100) / 100;
-        this.channel_per = Math.floor(progressArr[1] * 100) / 100;
-        this.FirstPID = [];
-        this.FirstPID.push(progressArr[2]);
-        this.FirstPID.push(progressArr[3]);
-        this.FirstPID.push(progressArr[4]);
+      // }
+      if (this.fileType == "xcp") {
+        var progressArr = get_load(this.fileType, this.daq_config, signalArr);
+        this.busload_per = Number((progressArr[0] * 100).toFixed(2));
+        this.channel_per = Number((progressArr[1] * 100).toFixed(2));
+        this.FirstPID = progressArr[2];
+        this.Measurement = progressArr[3];
       } else if (this.fileType == "ccp") {
-        this.daq_config.BAUDRATE = this.baudRate;
-        var progressArr = get_load_ccp(
-          variable_size_channel_0,
-          variable_size_channel_1,
-          variable_size_channel_2,
-          this.daq_config
-        );
-        console.log(progressArr);
-        this.busload_per = Math.floor(progressArr[0] * 100) / 100;
-        this.channel0_per = Math.floor(progressArr[1] * 100) / 100;
-        this.channel1_per = Math.floor(progressArr[2] * 100) / 100;
-        this.channel2_per = Math.floor(progressArr[3] * 100) / 100;
+        // console.log(this.protocol);
+        var progressArr = get_load(this.fileType, this.daq_config, signalArr);
+
+        // this.busload_per = Math.floor(progressArr[0] * 100) / 100;
+        this.channel0_per = Number((progressArr[0] * 100).toFixed(2));
+        this.channel1_per = Number((progressArr[1] * 100).toFixed(2));
+        this.channel2_per = Number((progressArr[2] * 100).toFixed(2));
+        this.Measurement = progressArr[3];
       }
 
       //       this.$notify({
@@ -2156,7 +2316,8 @@ export default {
         this.packageSelected.length == 0 ||
         this.taskSelected.length == 0 ||
         this.vehId == "" ||
-        this.projectNumberVal == ""
+        this.projectNumberVal == "" ||
+        this.jsonName == ""
       ) {
         this.$message({
           type: "warning",
@@ -2170,92 +2331,52 @@ export default {
         packageSelected.push(this.translate[item]);
       });
 
-      var Measurement10ms = [];
-      var Measurement100ms = [];
-      var MeasurementSync = [];
-      for (var item in this.selectedSignal) {
-        console.log(this.selectedSignal);
-        if (this.selectedSignal[item]["10ms"]) {
-          Measurement10ms.push(item);
-        } else if (this.selectedSignal[item]["100ms"]) {
-          Measurement100ms.push(item);
-        } else if (this.selectedSignal[item]["sync"]) {
-          MeasurementSync.push(item);
+      var axiosObj = {
+        // Type: "RecordCfg",
+        Frame: {
+          //
+          Record: this.BMRchecked ? "true" : "false", // true:记录丢帧，false：不记录，
+          Time: 2, // 记录丢帧时长，单位min，先默认填30min
+        },
+        // MisFrameCoeff: 0.2,
+
+        simpleCfg: [
+          // {
+          //   Channel: 1,
+          //   Baudrate: 500000,
+          //   DBC: [],
+          // },
+        ],
+      };
+      if (this.addStart) {
+        if (!this.bk) {
+          this.$alert("a2l中不存在B_kl15或者B_kl15_msg", "信息", {});
+          return;
         }
+        // this.calculationPro("B_kl15");
+
+        axiosObj.StartRecord = [
+          {
+            SignalName: this.bkresult, //10ms
+            Source: 1,
+            Operator: ">",
+            Threshold: 0,
+            CascadeOp: "and",
+          },
+        ];
+        axiosObj.StopRecord = [
+          {
+            SignalName: this.bkresult,
+            Source: 1,
+            Operator: "<",
+            Threshold: 1,
+            CascadeOp: "and",
+          },
+        ];
+      } else {
+        axiosObj.StartRecord = [];
+        axiosObj.StopRecord = [];
       }
-      var DAQ = {};
-      if (this.fileType == "ccp") {
-        DAQ = {
-          "100ms time synchronous": {
-            FirstPID: this.daq_config.DAQ["100ms time synchronous"].FIRST_PID,
-          },
-          "10ms time synchronous": {
-            FirstPID: this.daq_config.DAQ["10ms time synchronous"].FIRST_PID,
-          },
-          "segment synchronous": {
-            FirstPID: this.daq_config.DAQ["segment synchronous"].FIRST_PID,
-          },
-        };
-        DAQ["10ms time synchronous"].Measurement = Measurement10ms;
-        DAQ["100ms time synchronous"].Measurement = Measurement100ms;
-        DAQ["segment synchronous"].Measurement = MeasurementSync;
-        // this.daq_config.DAQ;
-      } else if (this.fileType == "xcp") {
-
-
-        
-        if (this.FirstPID[2] >= 0) {
-          DAQ["100ms time synchronous"] = {
-            FirstPID: this.FirstPID[2],
-            Measurement: Measurement100ms,
-          };
-        }
-        if (this.FirstPID[1] >= 0) {
-          DAQ["10ms time synchronous"] = {
-            FirstPID: this.FirstPID[1],
-            Measurement: Measurement10ms,
-          };
-        }
-        if (this.FirstPID[0] >= 0) {
-          DAQ["segment synchronous"] = {
-            FirstPID: this.FirstPID[0],
-            Measurement: MeasurementSync,
-          };                                                                                
-        }
-        // DAQ = {
-        //   "100ms time synchronous": {
-        //     FirstPID: this.FirstPID[2],
-        //   },
-        //   "10ms time synchronous": {
-        //     FirstPID: this.FirstPID[1],
-        //   },
-        //   "segment synchronous": {
-        //     FirstPID: this.FirstPID[0],
-        //   },
-        // };
-        // DAQ["100ms time synchronous"].Measurement = Measurement100ms;
-        // DAQ["10ms time synchronous"].Measurement = Measurement10ms;
-        // DAQ["segment synchronous"].Measurement = MeasurementSync;
-      }
-
-      // --
-      // var MsgIDArr = [];
-      // var MsgIDObj = {};
-      // // var obj = { 513: [] };
-      // this.selectedDbc.forEach((item, index) => {
-      //   if (!MsgIDArr.includes(item.MsgID)) {
-      //     MsgIDArr.push(item.MsgID);
-      //   }
-      // });
-      // MsgIDArr.forEach((item,index)=>{
-      //   MsgIDObj[item]=[]
-      //    this.allresultDbc.forEach((value, cindex) => {
-      //   //  if(allresultDbc)
-      //   if(item.MsgID){
-
-      //   }
-      // });
-      // })
       var Monitoring = this.basicDbc;
       Monitoring.forEach((item, index) => {
         // console.log();
@@ -2267,107 +2388,196 @@ export default {
           }
         });
       });
-      console.log(Monitoring);
+      var Monitoring = Monitoring.filter((item, index) => {
+        return item.Signals.length != 0;
+      });
       var recordConf = [];
+      var DAQ = [];
+      var daqNum = 0;
 
+      this.Measurement.forEach((item, index) => {
+        if (item.length > 0) {
+          var cycle = this.daq_config;
+          var obj = {
+            MsgId:
+              this.fileType == "xcp"
+                ? this.daq_config.MsgId
+                : this.daq_config.MsgId[index],
+            DaqNumber: this.fileType == "xcp" ? daqNum : index,
+            EventChannel: index,
+            // FirstPID: this.FirstPID[index],
+            CycleTime: this.daq_config.CycleNum[index] * 1000,
+            // Priority: this.daq_config.Priority,
+            Measurement: [],
+            Measurements: this.Measurement[index],
+          };
+          if (this.fileType == "xcp") {
+            obj.FirstPID = this.FirstPID[index];
+            obj.Priority = this.daq_config.Priority[index];
+          } else if (this.fileType == "ccp") {
+            obj.FirstPID = this.daq_config.FirstPID[index];
+          }
+
+          DAQ.push(obj);
+          daqNum++;
+        }
+      });
+      console.log(DAQ);
+
+      // if (this.fileType == "ccp") {
+      //   axiosObj.simpleCfg[0][
+      //     this.fileType.toUpperCase()
+      //   ][0].StationAddress = this.daq_config.StationAddress;
+      // }
+      //
+
+      // var tagObj = {
+      //   ProjectId: this.projectNumberVal,
+      //   VehicleId: this.vehId,
+      //   // sn:this.testsn,
+      //   Package: packageSelected,
+      //   Task: this.taskSelected,
+      //   MainPack: packageSelected[this.mainPackageIndex],
+      //   MainTask: this.taskSelected[this.mainTaskIndex],
+      //   Comment: this.comment,
+      //   A2L: this.locationA2l,
+      //   HEX: this.locationHex,
+      //   Tester: this.username,
+      //   UserGroup: "internal", //localStorage.getItem('group')
+
+      //   confName: "DataCfg_" + this.jsonName + "_" + this.getTime(),
+
+      //   // a2lChannel: this.a2lChannel,
+      //   protoolType: this.daq_config.protoolType,
+
+      //   BMR: this.BMRchecked,
+      // };
+      // axiosObj.Tag = tagObj;
+
+      //
       if (this.submitList.includes("a2l")) {
-        recordConf.push({
+        var a2lobj = {
+          connetInterface:
+            this.canRadio == "OBD" ? "obd" : this.fileType.toUpperCase(),
           Channel: this.a2lChannel,
-          BMR: {
-            Filter: this.BMRchecked,
-          },
-          BAUDRATE: this.baudRate,
-          DAQ: DAQ,
-        });
+          BMR: this.BMRchecked,
+          a2lId: this.a2lId,
+          // Channel: this.a2lChannel,
+          Baudrate: this.baudRate,
+          CANType: this.daq_config.CANType,
+          CANFDBaudrate: this.daq_config.CANFDBaudrate,
+
+          [this.fileType.toUpperCase()]: [
+            {
+              RequestId: this.daq_config.RequestId,
+              ResponseId: this.daq_config.ResponseId,
+
+              StationAddress:
+                this.fileType == "ccp"
+                  ? this.daq_config.StationAddress
+                  : undefined,
+
+              ByteOrder: this.daq_config.ByteOrder,
+              DAQ: DAQ,
+            },
+          ],
+        };
+        axiosObj.simpleCfg.push(a2lobj);
       }
+
+      // recordConf=axiosObj
+      // }
       if (this.submitList.includes("dbc")) {
-        recordConf.push({
-          Channel: this.dbcChannel,
-          BAUDRATE: 500000,
+        axiosObj.simpleCfg.push({
+          connetInterface: "dbc",
+          Channel: 1, //this.dbcChannel
+          Baudrate: 500000,
           Monitoring: Monitoring,
         });
       }
-      recordConf.sort((a, b) => {
-        return a.Channel - b.Channel;
-      });
 
-      var axiosData = {
-        PA: this.username,
-
-        meta: {
-          projectId: this.projectNumberVal,
-          vehId: this.vehId,
-          comment: this.comment,
-          packages: packageSelected,
-          tasks: this.taskSelected,
-          mainPack: packageSelected[this.mainPackageIndex],
-          mainTask: this.taskSelected[this.mainTaskIndex],
-          a2lName: this.a2lChannel==0?this.locationA2l0:this.locationA2l1,
-          hexName: this.a2lChannel==0?this.locationHex0:this.locationHex1,
-          user: this.username,
-          userGroup: localStorage.getItem("group"),
-          investigation: {
-            investigationTopic: "",
-            investigationSubTopic: "",
-            investigationCaseId: "",
-          },
-          confName: this.jsonName || this.getTime(),
-          a2lChannel: this.a2lChannel,
-          BAUDRATE: this.baudRate,
-          BMR: this.BMRchecked,
-        },
-        uid: this.uid,
-        recordConf: recordConf,
-      };
-      console.log("axiosData", axiosData);
-
-      // formData.append("projectNumberVal", this.projectNumberVal);
-      // formData.append("vehId", this.vehId);
-      // formData.append("comment", this.comment);
-      // var packageSelected = [];
-      // this.packageSelected.forEach((item, index) => {
-      //   packageSelected.push(this.translate[item]);
+      // recordConf.sort((a, b) => {
+      //   return a.Channel - b.Channel;
       // });
-      // formData.append("packages", packageSelected);
-      // formData.append("tasks", this.taskSelected);
-      // formData.append("mainPack", packageSelected[this.mainPackageIndex]);
-      // formData.append("mainTask", this.taskSelected[this.mainTaskIndex]);
+      axiosObj.meta = {
+        projectId: this.projectNumberVal,
+        vehId: this.vehId,
+        comment: this.comment,
+        packages: packageSelected,
+        tasks: this.taskSelected,
+        mainPack: packageSelected[this.mainPackageIndex],
+        mainTask: this.taskSelected[this.mainTaskIndex],
+        a2lName: this.locationA2l,
+        hexName: this.locationHex,
+        user: this.username,
+        userGroup: localStorage.getItem("userGroup"),
+        investigation: {
+          investigationTopic: "",
+          investigationSubTopic: "",
+          investigationCaseId: "",
+        },
+        confName: this.jsonName || this.getTime(),
+        a2lChannel: this.a2lChannel,
+        BAUDRATE: this.baudRate,
+        BMR: this.BMRchecked,
+        canRadio: this.canRadio,
+        daqRadio: this.daqRadio,
+      };
+      console.log(JSON.stringify(axiosObj));
 
-      // for (var [a, b] of formData.entries()) {
-      //   console.log(a, b);
-      // }
       this.$http
-        .post("/test/generateJsonForRecord", axiosData)
+        .post("/ec/getSignalSelect", axiosObj)
         .then((res) => {
           console.log(res);
           if (res && res.status == 200 && res.data.res == "V") {
+            this.submitLoading = false;
             this.$message({
               type: "success",
               message: "提交成功",
             });
-            // this.jsonuid = res.data.res;
+            // this.cfgjsonId = res.data.res;
+            // this.jsonButtonDisabled = false;
+            // this.jsonFileData = res.data.data;
+
             var row = res.data.data;
-            this.sendJsonTable = row;
-            this.jsonuid = row[0].uid;
+            this.sendJsonTable = [row];
+            this.cfgjsonId = row.cfgjsonId;
           } else {
+            this.jsonButtonDisabled = false;
+            this.submitLoading = false;
             this.$message({
               type: "error",
               message: "提交失败",
             });
           }
-
-          this.submitLoading = false;
         })
         .catch((res) => {
           this.$message({
             type: "error",
-            message: "提交失败",
+            message: "提交失败!",
           });
           this.submitLoading = false;
         });
     },
+    jsonFile() {
+      var jsonStr = JSON.stringify(this.jsonFileData);
+      var blob = new Blob([jsonStr], {
+        type: "text/plain;charset=utf-8",
+      });
+      var d = new Date();
+      var n = d.getTime();
+      var file_name = this.locationA2l.slice(0, -4);
+      // var name =
+      //   file_name + "-[JS]-" + n + Math.ceil(Math.random() * 1000) + ".json";
+      var name = this.getTime() + ".json";
+      saveAs(blob, name);
+    },
     stepReduce() {
-      if (this.step == 1 && this.signalStep == 1) {
+      if (
+        this.step == 1 &&
+        this.signalStep == 1 &&
+        this.submitList.includes("a2l")
+      ) {
         this.signalStep--;
       } else {
         this.step--;
@@ -2378,7 +2588,19 @@ export default {
       if (!this.tooltipDisabled) {
         return;
       }
-      if (
+      if (this.step == 0 && this.submitList.length == 0) {
+        this.$message({
+          type: "warning",
+          message: "请至少提交一个a2l或dbc文件。",
+        });
+        return;
+      } else if (this.step == 0 && this.submitList.includes("a2l")) {
+        this.step++;
+        this.signalStep = 0;
+      } else if (this.step == 0 && this.submitList.includes("dbc")) {
+        this.step++;
+        this.signalStep = 1;
+      } else if (
         this.step == 1 &&
         this.signalStep == 0 &&
         this.submitList.includes("dbc")
@@ -2397,38 +2619,49 @@ export default {
         });
         return;
       }
-      var obj = {
-        uid: this.jsonuid,
-        sn: index,
-        PA: this.username,
-        confName: this.sendJsonTable[0]["confName"],
-      };
-      this.$http
-        .post("/test/generateAndSendImg", obj)
-        .then((res) => {
-          console.log(res);
-          var { res, data, detail } = res.data;
-          if (res == "V") {
-            this.$message({
-              type: "success",
-              message: "提交成功",
-            });
-          } else {
-            this.$message({
-              type: "warning",
-              message: detail,
-            });
-          }
+      this.$confirm("是否确认提交到设备 " + index + "?", "提交", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "info",
+      })
+        .then(() => {
+          var obj = {
+            cfgjsonId: this.cfgjsonId,
+            sn: index,
+            PA: this.username,
+            // confName: this.sendJsonTable[0]["confName"],
+          };
+          this.$http
+            .post("/ec/SendingQueue", obj)
+            .then((res) => {
+              console.log(res);
+              var { res, data, detail } = res.data;
+              if (res == "V") {
+                this.$message({
+                  type: "success",
+                  message: "提交成功",
+                });
+                this.jsonButtonDisabled = false;
+                this.jsonFileData = data;
+                this.jsonFile();
+              } else {
+                this.$message({
+                  type: "warning",
+                  message: detail,
+                });
+              }
 
-          this.submitLoading = false;
+              this.submitLoading = false;
+            })
+            .catch((res) => {
+              this.$message({
+                type: "error",
+                message: "提交失败",
+              });
+              this.submitLoading = false;
+            });
         })
-        .catch((res) => {
-          this.$message({
-            type: "error",
-            message: "提交失败",
-          });
-          this.submitLoading = false;
-        });
+        .catch(() => {});
     },
 
     // step2() {
@@ -2591,14 +2824,26 @@ export default {
     },
   },
   watch: {
+    // daqRadio(){
+    //   this.daq_config = this.daq_configArr[this.daqRadio];
+    //   this.baudRate = this.daq_config.Baudrate;
+    //   this.a2lChannel = this.daq_config.Channel;
+    //   console.log(this.daq_config );
+
+    // },
     step(val) {
       if (val == 3) {
         this.$http
-          .post("/test/getPersionalDevices", { PA: this.username })
+          .post("/bm/getPersionalDevices", { PA: this.username })
           .then((res) => {
             console.log(res);
             if (res.data.res == "V") {
               this.boxData = res.data.data.sort();
+              // var concatData = res.data.data.sort();
+              // var gateway=['UA0001','UA0002','UA0003','UA0004','UA0005','UA0006','UA0007','UA0008','UA0009','UA0010']
+              // this.boxData=gateway.concat(concatData)
+              // if (!this.boxData.includes("UA0001")) {
+              // }
             } else {
               this.$message({
                 type: "warning",
@@ -2656,6 +2901,7 @@ export default {
             .includes(this.searchTableVal.toLowerCase())
       );
     },
+
     searchTableDbc(val) {
       this.resultDbc = this.allresultDbc.filter(
         (data) => !val || data.Name2.toLowerCase().includes(val.toLowerCase())
@@ -2680,7 +2926,7 @@ export default {
             .includes(String(val).toLowerCase()) ||
           String(data.sn).toLowerCase().includes(String(val).toLowerCase()) ||
           data.vehId.toLowerCase().includes(val.toLowerCase()) ||
-          data.uid.toLowerCase().includes(val.toLowerCase())
+          data.cfgjsonId.toLowerCase().includes(val.toLowerCase())
       );
     },
     allresultJson(val) {
@@ -2705,7 +2951,9 @@ export default {
           data.vehId
             .toLowerCase()
             .includes(this.searchTableJson.toLowerCase()) ||
-          data.uid.toLowerCase().includes(this.searchTableJson.toLowerCase())
+          data.cfgjsonId
+            .toLowerCase()
+            .includes(this.searchTableJson.toLowerCase())
       );
     },
 
@@ -2858,5 +3106,8 @@ i:hover {
 .submit /deep/ .el-button span {
   width: 45px;
   display: inline-block;
+}
+.el-dialog__wrapper /deep/ .el-radio {
+  margin-top: 1em;
 }
 </style>

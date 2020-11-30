@@ -43,8 +43,8 @@
       <!-- :plugin="plugin" :events="events" -->
       <el-amap-polyline :editable="polyline.editable" :path="polyline.path" :events="polyline.events">
       </el-amap-polyline>
-      <el-amap-marker v-for="(item,index) in markerArr" :key="index" vid="marker" :position="item.center" :icon="item.icon"
-        :label="item.label">
+      <el-amap-marker v-for="(item,index) in markerArr" :key="index" vid="marker" :position="item.center"
+        :icon="item.icon" :label="item.label">
       </el-amap-marker>
       <!-- :label="label" -->
 
@@ -58,7 +58,7 @@
       </el-row>
     </div> -->
 
-    <div v-if="username!='admin'">
+    <div>
       <h3 style="position:relative">
         设备借用申请
         <el-input size="small" style="position:absolute;width:150px;top:0;right:0" v-model="searchValBor"
@@ -81,11 +81,17 @@
           <el-table-column label="申请借用">
             <template scope="scope">
               <!-- {{scope.row.deviceApply}} -->
-
-              <el-button plain @click="applyForDevice(scope.row,'admin')" v-if="username==scope.row.deviceKeeper"
-                type="success">归还</el-button>
+   <el-tooltip v-if="username==scope.row.deviceKeeper" class="item" effect="dark"
+                :content="'当前申请人: '+(scope.row.deviceApply['name']||'无')"
+                
+                placement="top-start">
+              <el-button plain @click="applyForDevice(scope.row,'admin')" 
+                type="success" >归还</el-button>
+   </el-tooltip>
+                <!-- +', 电话:'+(scope.row.deviceApply['phone']||'无') -->
               <el-tooltip v-else class="item" effect="dark"
-                :content="'当前申请人: '+(scope.row.deviceApply['name']||'无')+', 电话:'+(scope.row.deviceApply['phone']||'无')"
+                :content="'当前申请人: '+(scope.row.deviceApply['name']||'无')"
+                
                 placement="top-start">
 
                 <div>
@@ -143,7 +149,8 @@
                 <el-popover title="申请队列" placement="top-start" width="200" trigger="hover">
                   <div>
                     <div v-for="(item,index) in scope.row.useApply" :key="index">
-                      申请人:{{item.name}}, 电话:{{item.phone}}</div>
+                      申请人:{{item.applicant}}</div>
+                      <!-- , 电话:{{item.phone}} -->
 
                   </div>
                   <el-button plain disabled
@@ -169,33 +176,101 @@
       <my-page ref="page" :tableData.sync="tableDataBor" :result="resultBor"></my-page>
     </div>
     <!-- <el-divider></el-divider> -->
-    <div @mousemove="highchartMove($event)" @touchmove="highchartMove($event)" @touchstart="highchartMove($event)">
-      <!-- <h4>{{canvas[0].title}}</h4>
+    <div>
+      <div style="float:left;width:70%;" @mousemove="highchartMove($event)" @touchmove="highchartMove($event)"
+        @touchstart="highchartMove($event)">
+        <!-- <h4>{{canvas[0].title}}</h4>
         <p>{{canvas[0].description}}</p> -->
-      <div style="width:100%;float:left" v-for="(pitem, pindex) in signalData" :key="pindex">
-        <div style="text-align:center">{{ canvas[pindex].title }}</div>
-        <div style="text-align:center;font-size:12px;color:#888">
-          {{ canvas[pindex].description }}
-        </div>
-        <!-- <div style="font-size:12px;color:#888;display:inline-block">a2lname:{{canvas[pindex].a2lname}}</div>
+        <div style="width:100%;float:left" v-for="(pitem, pindex) in signalData" :key="pindex">
+          <div style="text-align:center">{{ canvas[pindex].title }}</div>
+          <div style="text-align:center;font-size:12px;color:#888">
+            {{ canvas[pindex].description }}
+          </div>
+          <!-- <div style="font-size:12px;color:#888;display:inline-block">a2lname:{{canvas[pindex].a2lname}}</div>
         <div style="font-size:12px;color:#888;display:inline-block">hexname:{{canvas[pindex].hexname}}</div> -->
-        <div style="margin-left:1em">
-          a2lname:<el-tag type="info">{{ canvas[pindex].a2lname }}</el-tag>
-          hexname:<el-tag type="info">{{ canvas[pindex].hexname }}</el-tag>
+
+          <!-- <div style="margin-left:1em">
+            a2lname:<el-tag type="info">{{ canvas[pindex].a2lname }}</el-tag>
+            hexname:<el-tag type="info">{{ canvas[pindex].hexname }}</el-tag>
+          </div> -->
+
+          <highcharts style="height:300px;margin-bottom:-20px" :options="pitem.physical"></highcharts>
+
+          <highcharts style="height:50px;" v-for="(item, index) in pitem.boolean" :key="index" :options="item">
+          </highcharts>
+          <el-divider></el-divider>
         </div>
 
-        <highcharts style="height:300px;margin-bottom:-20px" :options="pitem.physical"></highcharts>
-
-        <highcharts style="height:50px;" v-for="(item, index) in pitem.boolean" :key="index" :options="item">
-        </highcharts>
-        <el-divider></el-divider>
-      </div>
-
-      <!-- <highcharts style="height:50px;" :options="boolean0"> </highcharts>
+        <!-- <highcharts style="height:50px;" :options="boolean0"> </highcharts>
 
      
    
         <highcharts style="height:50px;" :options="boolean1"> </highcharts> -->
+      </div>
+
+      <el-scrollbar style="float:left;width:30%;height:450px;">
+        <!-- <div style="height:36px;line-height:36px;font-size:20px;color:#67C23A">
+        <i class="el-icon-location-information"></i><span>6002</span> -->
+        <el-collapse accordion>
+          <my-coll v-for="(item,index) in collList" :key="index" :sn="item.sn" :tableData="item.tableData" :canvas.sync="canvas"></my-coll>
+          <!-- <el-collapse-item>
+            <template slot="title">
+              <div style="line-height:18px;font-size:18px">
+                <i class="el-icon-location-information"></i>6002
+              </div>
+            </template>
+            <el-table
+              :data="tableData.filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
+              style="width: 100%">
+
+              <el-table-column label="Name" prop="name">
+                <template slot="header" slot-scope="scope">
+                  <el-input v-model="search" size="mini" style="width:100px" placeholder="搜索" />
+                </template>
+              </el-table-column>
+              <el-table-column align="right">
+                <template slot="header" slot-scope="scope">
+                 操作
+                </template>
+                <template slot-scope="scope">
+                  <el-button circle size="mini" @click="handleEdit(scope.$index, scope.row)">&nbsp;P&nbsp;</el-button>
+                  <el-button circle size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">B</el-button>
+                  <el-button circle size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">S</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-collapse-item>
+          <el-collapse-item>
+            <template slot="title">
+              <div style="line-height:18px;font-size:18px">
+                <i class="el-icon-location-information"></i>6002
+              </div>
+            </template>
+            <el-table
+              :data="tableData.filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
+              style="width: 100%">
+
+              <el-table-column label="Name" prop="name">
+                <template slot="header" slot-scope="scope">
+                  <el-input v-model="search" size="mini" style="width:100px" placeholder="搜索" />
+                </template>
+              </el-table-column>
+              <el-table-column align="right">
+                <template slot="header" slot-scope="scope">
+                 操作
+                </template>
+                <template slot-scope="scope">
+                  <el-button circle size="mini" @click="handleEdit(scope.$index, scope.row)">&nbsp;P&nbsp;</el-button>
+                  <el-button circle size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">B</el-button>
+                  <el-button circle size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">S</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-collapse-item> -->
+        </el-collapse>
+
+      </el-scrollbar>
+
     </div>
   </div>
 </template>
@@ -204,10 +279,10 @@
 import Box from "./Box.vue";
 import mypage from "./Page";
 // import Highcharts from "highcharts";
-import { Chart } from "highcharts-vue";
+// import { Chart } from "highcharts-vue";
 // const iot = require("alibabacloud-iot-device-sdk");
 import { AMapManager } from "vue-amap";
-
+import mycoll from "./Coll.vue";
 let amapManager = new AMapManager();
 
 // var Highcharts=Highchart;
@@ -265,7 +340,30 @@ export default {
         // },
         // editable: false,
       },
-
+      collList: [
+        {
+          sn: 6001,
+          tableData: [
+            {
+              name: "nmot_1",
+              data: [],
+              boolean: [],
+            },
+            {
+              name: "nmot_2",
+              data: [],
+            },
+            {
+              name: "nmot_3",
+              data: [],
+            },
+            {
+              name: "nmot_4",
+              data: [],
+            },
+          ],
+        },
+      ],
       // hackReset: true
     };
   },
@@ -278,7 +376,7 @@ export default {
         if (useApply.length != 0) {
           useApply.forEach((item, index) => {
             console.log(index);
-            if (item.name == this.username) {
+            if (item.applicant == this.username) {
               flag++;
             }
           });
@@ -581,6 +679,32 @@ export default {
     },
   },
   methods: {
+         compare(p) {
+        return function (m, n) {
+          var a = m[p];
+          var b = n[p];
+          if (a > b) {
+              return 1;
+            } else if (a < b) {
+              return -1;
+            } else {
+              return 0;
+            }
+        };
+      },
+      compareMin(p) {
+        return function (m, n) {
+          var a = m[p];
+          var b = n[p];
+          if (b > a) {
+              return 1;
+            } else if (b < a) {
+              return -1;
+            } else {
+              return 0;
+            }
+        };
+      },
     sortTable(obj) {
       console.log(obj);
       var { prop, order } = obj;
@@ -588,16 +712,26 @@ export default {
         return function (m, n) {
           var a = m[p];
           var b = n[p];
-          console.log(a > b);
-          return a > b;
+          if (a > b) {
+              return 1;
+            } else if (a < b) {
+              return -1;
+            } else {
+              return 0;
+            }
         };
       }
       function compareMin(p) {
         return function (m, n) {
           var a = m[p];
           var b = n[p];
-          console.log(b > a);
-          return b > a;
+          if (b > a) {
+              return 1;
+            } else if (b < a) {
+              return -1;
+            } else {
+              return 0;
+            }
         };
       }
 
@@ -634,16 +768,26 @@ export default {
         return function (m, n) {
           var a = m[p];
           var b = n[p];
-          console.log(a > b);
-          return a > b;
+          if (a > b) {
+              return 1;
+            } else if (a < b) {
+              return -1;
+            } else {
+              return 0;
+            }
         };
       }
       function compareMin(p) {
         return function (m, n) {
           var a = m[p];
           var b = n[p];
-          console.log(b > a);
-          return b > a;
+          if (b > a) {
+              return 1;
+            } else if (b < a) {
+              return -1;
+            } else {
+              return 0;
+            }
         };
       }
 
@@ -678,7 +822,7 @@ export default {
     },
     releaseDevice(row) {
       this.$http
-        .post("device/releaseLock", { sn: row.sn, applier: this.username }) //开锁 owner username=deviceUser
+        .post("/BorrowingManagement/releaseLock", { sn: row.sn, applier: this.username }) //开锁 owner username=deviceUser
         .then((res) => {
           console.log(res);
           var { res, data, detail } = res.data;
@@ -689,7 +833,7 @@ export default {
               }
             });
 
-            this.allresultBor = data;
+            this.allresultBor = data.sort(this.compare('sn'));
             this.$message({
               type: "success",
               message: "释放成功!",
@@ -711,7 +855,7 @@ export default {
     },
     applyForLock(row) {
       this.$http
-        .post("device/applyForLock", { sn: row.sn, applier: this.username }) //锁申请
+        .post("/BorrowingManagement/applyForLock", { sn: row.sn, applier: this.username }) //锁申请
         .then((res) => {
           console.log(res);
           var { res, data, detail } = res.data;
@@ -726,7 +870,7 @@ export default {
                 item.deviceApply = item.deviceApply[0];
               }
             });
-            this.allresultBor = data;
+            this.allresultBor = data.sort(this.compare('sn'));
             // }
             // console.log(tableDataBor);
             // tableDataBor.forEach((item,index)=>{
@@ -754,7 +898,7 @@ export default {
         var applier = this.username;
       }
       this.$http
-        .post("device/applyForDevice", { sn: row.sn, applier: applier }) //外借申请 归还applier admin
+        .post("/BorrowingManagement/applyForDevice", { sn: row.sn, applier: applier }) //外借申请 归还applier admin
         .then((res) => {
           console.log(res);
           var { res, data, detail } = res.data;
@@ -776,7 +920,7 @@ export default {
               }
             });
 
-            this.allresultBor = data;
+            this.allresultBor = data.sort(this.compare('sn'));
             console.log(this.allresultBor);
           } else {
             this.$message({
@@ -850,150 +994,177 @@ export default {
     },
   },
   created() {
+    this.collList = [
+      {
+        sn: 6001,
+        tableData: [
+          {
+            name: "nmot_1",
+            data: this.randomArr(),
+            boolean: this.randomBoolean(),
+          },
+          {
+            name: "nmot_2",
+            data: this.randomArr(),
+            boolean: this.randomBoolean(),
+          },
+          {
+            name: "nmot_3",
+            data: this.randomArr(),
+            boolean: this.randomBoolean(),
+          },
+          {
+            name: "nmot_4",
+            data: this.randomArr(),
+            boolean: this.randomBoolean(),
+          },
+        ],
+      },
+    ];
     this.progressArr = { AAAA: 25, BBBB: 50, CCCC: 75, DDDD: 100 };
 
-    // this.canvas = [
-    //   {
-    //     title: "AAA",
-    //     description: "BBB",
-    //     a2lname: "xxx",
-    //     hexname: "xxxxx",
-    //     // physical:[],
-    //     plotdata: {
-    //       x: [
-    //         1,
-    //         2,
-    //         3,
-    //         4,
-    //         5,
-    //         6,
-    //         7,
-    //         8,
-    //         9,
-    //         10,
-    //         11,
-    //         12,
-    //         13,
-    //         14,
-    //         15,
-    //         16,
-    //         17,
-    //         18,
-    //         19,
-    //         20,
-    //         21,
-    //         22,
-    //         23,
-    //         24,
-    //         25,
-    //         26,
-    //         27,
-    //         28,
-    //         29,
-    //         30,
-    //         31,
-    //         32,
-    //         33,
-    //         34,
-    //         35,
-    //         36,
-    //         37,
-    //         38,
-    //         39,
-    //         40,
-    //         41,
-    //         42,
-    //         43,
-    //         44,
-    //         45,
-    //         46,
-    //         47,
-    //         48,
-    //         49,
-    //         50,
-    //         51,
-    //         52,
-    //         53,
-    //         54,
-    //         55,
-    //         56,
-    //         57,
-    //         58,
-    //         59,
-    //         60,
-    //         61,
-    //         62,
-    //         63,
-    //         64,
-    //         65,
-    //         66,
-    //         67,
-    //         68,
-    //         69,
-    //         70,
-    //         71,
-    //         72,
-    //         73,
-    //         74,
-    //         75,
-    //         76,
-    //         77,
-    //         78,
-    //         79,
-    //         80,
-    //         81,
-    //         82,
-    //         83,
-    //         84,
-    //         85,
-    //         86,
-    //         87,
-    //         88,
-    //         89,
-    //         90,
-    //         91,
-    //         92,
-    //         93,
-    //         94,
-    //         95,
-    //         96,
-    //         97,
-    //         98,
-    //         99,
-    //       ],
-    //       physical: [
-    //         { name: "signal1", data: this.randomArr() },
-    //         { name: "signal2", data: this.randomArr() },
-    //         { name: "signal3", data: this.randomArr() },
+    this.canvas = [
+      {
+        title: "AAA",
+        description: "BBB",
+        a2lname: "xxx",
+        hexname: "xxxxx",
+        // physical:[],
+        plotdata: {
+          x: [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88,
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+            99,
+          ],
+          physical: [
+            { name: "signal1", data: this.randomArr() },
+            { name: "signal2", data: this.randomArr() },
+            { name: "signal3", data: this.randomArr() },
 
-    //         // { name: "signal1", data: this.randomArr() },
-    //         // { name: "signal2", data: this.randomArr() },
-    //         // { name: "signal3", data: this.randomArr() },
+            // { name: "signal1", data: this.randomArr() },
+            // { name: "signal2", data: this.randomArr() },
+            // { name: "signal3", data: this.randomArr() },
 
-    //         // { name: "signal1", data: this.randomArr() },
-    //         // { name: "signal2", data: this.randomArr() },
-    //         // { name: "signal3", data: this.randomArr() }
-    //       ],
-    //     },
-    //     boolean: [
-    //       {
-    //         name: "sig3",
-    //         data: this.randomBoolean(),
-    //       },
-    //       {
-    //         name: "sig3",
-    //         data: this.randomBoolean(),
-    //       },
-    //     ],
-    //   },
-    // ];
+            // { name: "signal1", data: this.randomArr() },
+            // { name: "signal2", data: this.randomArr() },
+            // { name: "signal3", data: this.randomArr() }
+          ],
+        },
+        boolean: [
+          {
+            name: "sig3",
+            data: this.randomBoolean(),
+          },
+          {
+            name: "sig3",
+            data: this.randomBoolean(),
+          },
+        ],
+      },
+    ];
     // var markerArr = [];
     this.$http
-      .get("http://139.224.24.175:8001/overview/devicePosition")
+      .get("/BorrowingManagement/devicePosition")
       .then((res) => {
         console.log(res);
         var { data } = res.data;
-        this.allresultDevice = data;
+        this.allresultDevice = data.sort(this.compare('sn'));
         this.resultDevice = this.allresultDevice.filter(function () {
           return true;
         });
@@ -1001,7 +1172,7 @@ export default {
 
         data.forEach((item) => {
           var { deviceOnline, GPS_Longitude, GPS_Latitude, sn } = item;
-         
+
           // if (deviceOnline) {
           // var marker = new AMap.Marker({
           //   position: new AMap.LngLat(GPS_Longitude, GPS_Latitude), // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
@@ -1014,13 +1185,10 @@ export default {
               content: sn,
               offset: [-5, -15],
             },
-           
-           
           };
-           if (deviceOnline) {
-          
+          if (deviceOnline) {
           } else {
-             marker.icon=require("../assets/download/map-marker.png");
+            marker.icon = require("../assets/download/map-marker.png");
           }
           this.markerArr.push(marker);
           // }
@@ -1078,7 +1246,7 @@ export default {
 
     // })
     this.$http
-      .get("/device/getDeviceAndLockRequest")
+      .get("/BorrowingManagement/getDeviceAndLockRequest")
       .then((res) => {
         console.log(res);
         var { data } = res.data;
@@ -1095,24 +1263,24 @@ export default {
           }
         });
 
-        this.allresultBor = data;
+        this.allresultBor = data.sort(this.compare('sn'));
         console.log(this.allresultBor);
 
         //      this.allresultBor = [
-        //   {
-        //     sn: "6000",
-        //     islocked: true,
-        //     vehNum: "san.zhang",
-        //     xmh: "2234234",
-        //     deviceKeeper: "san.zhang",
-        //     deviceApply: [{ name: "li.gao", phone: "132132354" }],
-        //     deviceUser: "yang.mei",
-        //     useApply: [
-        //       { name: "li.gao", phone: "132132354" },
-        //       { name: "li.gao", phone: "132132354" }
-        //     ],
-        //     borrow_date: "Sun, 26 Apr 2020 16:16:46 GMT"
-        //   },
+          // {
+          //   sn: "6000",
+          //   islocked: true,
+          //   vehNum: "san.zhang",
+          //   xmh: "2234234",
+          //   deviceKeeper: "san.zhang",
+          //   deviceApply: [{ name: "li.gao", phone: "132132354" }],
+          //   deviceUser: "yang.mei",
+          //   useApply: [
+          //     { name: "li.gao", phone: "132132354" },
+          //     { name: "li.gao", phone: "132132354" }
+          //   ],
+          //   borrow_date: "Sun, 26 Apr 2020 16:16:46 GMT"
+          // },
         //   {
         //     sn: "6000",
         //     islocked: true,
@@ -1389,7 +1557,8 @@ export default {
   components: {
     "my-box": Box,
     "my-page": mypage,
-    highcharts: Chart,
+    // highcharts: Chart,
+    "my-coll": mycoll,
   },
 };
 </script>
@@ -1399,6 +1568,15 @@ export default {
   height: 20px;
   line-height: 20px;
   margin: 1em;
+}
+.overview /deep/ .el-scrollbar__wrap {
+  overflow-x: hidden;
+}
+.overview /deep/ .el-collapse-item__wrap {
+  border-bottom: none;
+}
+.overview /deep/ .el-collapse-item__content {
+  padding-bottom: 0;
 }
 /* .overview /deep/ .offlinePoint {
   color: #666;

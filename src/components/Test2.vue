@@ -1,5 +1,5 @@
 <template>
-<!-- 辉景 -->
+<!-- 辉景 旧版 -->
   <div>
     <div v-show="configType==''" class="select" style="margin:0em auto;padding:6em 0;width:1100px;height:100%;">
       <el-row :gutter="12">

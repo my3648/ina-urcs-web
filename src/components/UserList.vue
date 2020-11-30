@@ -102,7 +102,7 @@ export default {
   },
   created() {
     this.$http
-      .post("/admin/getallUsers")
+      .post("/bm/getallUsers")
       .then(res => {
         console.log(res);
         var { res, data, detail } = res.data;
@@ -138,7 +138,7 @@ export default {
         type: "warning"
       })
         .then(() => {
-          this.$http.post("admin/deleteUser", { username: name }).then(res => {
+          this.$http.post("/bm/deleteUser", { username: name }).then(res => {
             console.log(res);
             var { res, data, detail } = res.data;
             if (res == "V") {
@@ -186,7 +186,7 @@ export default {
           // }
 
           this.$http
-            .post("/admin/addNewUser", this.form)
+            .post("/bm/addNewUser", this.form)
             .then(res => {
               console.log(res);
               var { res, data, detail } = res.data;

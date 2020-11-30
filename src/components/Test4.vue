@@ -1,5 +1,5 @@
 <template>
-<!-- 内部版 -->
+  <!-- 内部版 -->
   <div>
     <div v-show="configType==''" class="select" style="margin:0em auto;padding:6em 0;width:1100px;height:100%;">
       <el-row :gutter="12">
@@ -97,7 +97,7 @@
 
       <div style="margin:1.5em 0;position:relative">
         <div style="position:absolute;top:50%;left:-80px;transform:translateY(-50%);cursor:pointer"
-          @click="returnMainPage()">
+          @click="returnMainPage()" v-show="step==0||sendType">
           <el-link icon="el-icon-back" type="primary">返回</el-link>
         </div>
         <el-steps :active="step">
@@ -127,7 +127,6 @@
           <el-button type="primary" @click="platDialog = false">确 定</el-button>
         </span>
       </el-dialog> -->
-      
 
       <el-dialog title="请选择protoolType" :close-on-click-modal="false" :visible.sync="protoolDialog" width="20%">
         <!-- <p style="margin:0 0 1em 0">请选择</p> -->
@@ -422,10 +421,10 @@
           <el-input placeholder="请输入车号" style="width:200px" v-model="vehId" clearable>
           </el-input>
 
-          <span style="margin:0 1em;font-weight:600">SN:</span>
+          <!-- <span style="margin:0 1em;font-weight:600">SN:</span>
 
           <el-input placeholder="请输入SN号" style="width:200px" v-model="testsn" clearable>
-          </el-input>
+          </el-input> -->
 
           <!-- <el-button type="primary" @click="addStart==true">add start/stop</el-button> -->
           <el-switch style="margin-left:2em" v-model="addStart" active-text="add start/stop">
@@ -465,7 +464,8 @@
         </el-input>
         <span style="margin:0 1em 0 1em;font-weight:600;">JSON命名:</span>
 
-        <el-input placeholder="为此次传递的JSON命名，便于以后使用" style="width:300px" @change="jsonNameReg()"  v-model="jsonName" clearable>
+        <el-input placeholder="为此次传递的JSON命名，便于以后使用" style="width:300px" @change="jsonNameReg()" v-model="jsonName"
+          clearable>
         </el-input>
         <!-- @change="jsonNameReg()" -->
 
@@ -648,7 +648,7 @@ export default {
       // -------------------------step 1
       projectNumberVal: "",
       vehId: "",
-      testsn:"",
+      // testsn:"",
       comment: "",
       jsonName: "",
       jsonTableLoading: false,
@@ -1386,22 +1386,19 @@ export default {
       console.log("p", data.protocol);
 
       if (this.fileType == "ccp") {
-      
         this.protocolArr = data.protocol;
-        this.protocolArr[1] = JSON.parse(JSON.stringify(data.protocol[0]));
+        // this.protocolArr[1] = JSON.parse(JSON.stringify(data.protocol[0]));
 
-        this.protocolArr[0].protoolType = "通过OBD连接";
-        this.protocolArr[0].Baudrate = 500000;
-        this.protocolArr[1].protoolType = "通过小辫子连接";
-        this.protocolArr[1].Baudrate = 1000000;
-        console.log(this.protocolArr);
+        // this.protocolArr[0].protoolType = "通过OBD连接";
+        // this.protocolArr[0].Baudrate = 500000;
+        // this.protocolArr[1].protoolType = "通过小辫子连接";
+        // this.protocolArr[1].Baudrate = 1000000;
+        // console.log(this.protocolArr);
 
-        this.protoolDialog = true;
+        // this.protoolDialog = true;
         this.baudRate = this.protocolArr[0].Baudrate;
         this.protocol = this.protocolArr[0];
         this.protoRadio = 0;
-
-        
       } else {
         this.protocolArr = data.protocol;
 
@@ -1445,8 +1442,8 @@ export default {
       this.dialogVisible = true;
 
       var formData = new FormData();
-      formData.append("file", this.$refs.filelab.files[0]);
-      formData.append("filename", this.$refs.filelab.files[0].name);
+      formData.append("labFile", this.$refs.filelab.files[0]);
+      // formData.append("filename", this.$refs.filelab.files[0].name);
       var labItem = this.$refs.filelab.files[0].name;
       // if (this.labArr.indexOf(labItem) != -1) {
       //   this.$message({
@@ -1464,7 +1461,7 @@ export default {
         },
       };
       this.$http
-        .post("/test/upload/labFile", formData, config)
+        .post("http://106.14.207.45:3001/ec/upload/labFile", formData, config)
         .then((res) => {
           this.dialogVisible = false;
           console.log("LAB中的所有信息（过滤前）", res);
@@ -1888,11 +1885,11 @@ export default {
       }
       this.taskSelected.splice(index, 1);
     },
-    jsonNameReg(){
+    jsonNameReg() {
       console.log(this.jsonName);
-      this.jsonName=this.jsonName.replace(/[^a-zA-Z0-9|\_]/g, "")
+      this.jsonName = this.jsonName.replace(/[^a-zA-Z0-9|\_]/g, "");
       // this.jsonName=this.jsonName.replace(/[^\d|\_]/g, "")
-     
+
       // this.jsonName=this.jsonName.replace(/[^]/g, "")
     },
     submitImg() {
@@ -1986,227 +1983,243 @@ export default {
       Monitoring.forEach((item, index) => {
         // console.log();
         item.Signals = [];
+        item.CycleTime = 10;
+
         this.selectedDbc.forEach((value, cindex) => {
           if (value.MsgID == item.MsgID) {
+            value.Max = 10.1;
+            value.Min = 1.01;
+            value.Factor = value.Scale;
+            value.Comment = "runcar";
+            value.ValTab = [];
             item.Signals.push(value);
           }
         });
       });
-      console.log(Monitoring);
+      var Monitoring = Monitoring.filter((item, index) => {
+        return item.Signals.length != 0;
+      });
+      console.log("Monitoring", Monitoring);
+      console.log("this.allresultDbc", this.allresultDbc);
       var recordConf = [];
       console.log("measurement", this.Measurement);
 
-      if (this.a2lChannel != 2) {
-        this.calculationPro("B_kl15");
-        // this.Measurement = this.Measurement.filter((item, index) => {
-        //   return item.length > 0;
-        // });
-        // this.Measurement.forEach((item)=>{
-        //   item.forEach((value)=>{
-        //    value=value.filter((sig,index)=>{
-        //     return sig!='B_kl15'
-        //   })
-        //   })
-        // })
-        // this.Measurement[1].push('B_kl15')
-        console.log("measurement", this.Measurement);
+      // if (this.a2lChannel != 2) {
+      this.calculationPro("B_kl15");
+      // this.Measurement = this.Measurement.filter((item, index) => {
+      //   return item.length > 0;
+      // });
+      // this.Measurement.forEach((item)=>{
+      //   item.forEach((value)=>{
+      //    value=value.filter((sig,index)=>{
+      //     return sig!='B_kl15'
+      //   })
+      //   })
+      // })
+      // this.Measurement[1].push('B_kl15')
+      console.log("measurement", this.Measurement);
 
-        var DAQ = [];
-        var daqNum = 0;
-        this.Measurement.forEach((item, index) => {
-          if (item.length > 0) {
-            var cycle = this.protocol;
-            var obj = {
-              MsgId: this.fileType=='xcp'?this.protocol.MsgId:this.protocol.MsgId[index],
-              DaqNumber: this.fileType=='xcp'?daqNum:index,
-              EventChannel: index,
-              // FirstPID: this.FirstPID[index],
-              CycleTime: this.protocol.CycleNum[index] * 1000,
-              // Priority: this.protocol.Priority,
-              Measurement: [],
-              Measurements: this.Measurement[index],
-            };
-            if (this.fileType == "xcp") {
-              obj.FirstPID = this.FirstPID[index];
-              obj.Priority = this.protocol.Priority[index];
-            }else if(this.fileType == "ccp"){
-              obj.FirstPID = this.protocol.FirstPID[index];
-            }
-
-            DAQ.push(obj);
-            daqNum++;
+      var DAQ = [];
+      var daqNum = 0;
+      this.Measurement.forEach((item, index) => {
+        if (item.length > 0) {
+          var cycle = this.protocol;
+          var obj = {
+            MsgId:
+              this.fileType == "xcp"
+                ? this.protocol.MsgId
+                : this.protocol.MsgId[index],
+            DaqNumber: this.fileType == "xcp" ? daqNum : index,
+            EventChannel: index,
+            // FirstPID: this.FirstPID[index],
+            CycleTime: this.protocol.CycleNum[index] * 1000,
+            // Priority: this.protocol.Priority,
+            Measurement: [],
+            Measurements: this.Measurement[index],
+          };
+          if (this.fileType == "xcp") {
+            obj.FirstPID = this.FirstPID[index];
+            obj.Priority = this.protocol.Priority[index];
+          } else if (this.fileType == "ccp") {
+            obj.FirstPID = this.protocol.FirstPID[index];
           }
-        });
 
-        var a2lObj = {
-          // Channel: this.a2lChannel,
-          // BMR: {
-          //   Filter: this.BMRchecked,
-          // },
-          // BAUDRATE: this.baudRate,
-          // DAQ: DAQ,
-          // filename: this.locationA2l,
-          Type: "RecordCfg",
-          Frame: {
-            //
-            Record: this.BMRchecked ? "true" : "false", // true:记录丢帧，false：不记录，
-            Time: 2, // 记录丢帧时长，单位min，先默认填30min
+          DAQ.push(obj);
+          daqNum++;
+        }
+      });
+
+      var a2lObj = {
+        // Channel: this.a2lChannel,
+        // BMR: {
+        //   Filter: this.BMRchecked,
+        // },
+        // BAUDRATE: this.baudRate,
+        // DAQ: DAQ,
+        // filename: this.locationA2l,
+        Type: "RecordCfg",
+        Frame: {
+          //
+          Record: this.BMRchecked ? "true" : "false", // true:记录丢帧，false：不记录，
+          Time: 2, // 记录丢帧时长，单位min，先默认填30min
+        },
+        MisFrameCoeff: 0.2,
+
+        ChannelCfg: [
+          {
+            Channel: this.protocol.Baudrate == 500000 ? 0 : 2,
+            // Channel: this.a2lChannel,
+            Baudrate: this.baudRate,
+            CANType: this.protocol.CANType,
+            CANFDBaudrate: this.protocol.CANFDBaudrate,
+
+            [this.fileType.toUpperCase()]: [
+              {
+                RequestId: this.protocol.RequestId,
+                ResponseId: this.protocol.ResponseId,
+
+                // "StationAddress": 9876,
+                ByteOrder: this.protocol.ByteOrder,
+                DAQ: DAQ,
+                //  [
+                // {
+                //   MsgId: 1705,
+                //   DaqNumber: 1, //index 从0开始
+                //   EventChannel: 2, //1-3
+                //   FirstPID: 5, //给高力的firstPID_1st_channel
+                //   CycleTime: 100, //
+                //   Priority: 5, //高力
+                //   Measurement: [],
+                //   Measurements: [
+                //     [
+                //       "Dcm_cntStrtSnceRgn",
+                //       "MonitoringAdjustment_e_I.B_thachnegx",
+                //     ],
+                //     ["PPfilDif_nrPartSnsrB1"],
+                //   ],
+                // },
+                // ],
+              },
+            ],
+            // CCP: [
+            //   {
+            //     RequestId: 1707,
+            //     ResponseId: 1705,
+            //     StationAddress: 9876,
+            //     ByteOrder: "MSB_FIRST",
+            //     DAQ: [
+            //       {
+            //         MsgId: 1705,
+            //         DaqNumber: 0,
+            //         EventChannel: 1,
+            //         // "FirstPID": 0,
+            //         CycleTime: 10,
+            //         // "Priority": 6,
+            //         Measurement: [],
+            //         Measurements: [
+            //           ["B_hspzw", "B_hspzw_old"],
+            //           ["B_hstctfa1", "B_cruisercnckact"],
+            //         ],
+            //       },
+            //       {
+            //         MsgId: 1705,
+            //         DaqNumber: 1, //index 从0开始
+            //         EventChannel: 2, //1-3
+            //         // "FirstPID": 5, //
+            //         CycleTime: 100, //
+            //         // "Priority": 5, //高力
+            //         Measurement: [],
+            //         Measurements: [
+            //           [
+            //             "Dcm_cntStrtSnceRgn",
+            //             "MonitoringAdjustment_e_I.B_thachnegx",
+            //           ],
+            //           ["PPfilDif_nrPartSnsrB1"],
+            //         ],
+            //       },
+            //     ],
+            //   },
+            // ],
           },
-          MisFrameCoeff: 0.2,
-
-          ChannelCfg: [
-            {
-              Channel: this.protocol.Baudrate == 500000 ? 0 : 2,
-              // Channel: this.a2lChannel,
-              Baudrate: this.baudRate,
-              CANType: this.protocol.CANType,
-              CANFDBaudrate: this.protocol.CANFDBaudrate,
-
-              [this.fileType.toUpperCase()]: [
-                {
-                  RequestId: this.protocol.RequestId,
-                  ResponseId: this.protocol.ResponseId,
-
-                  // "StationAddress": 9876,
-                  ByteOrder: this.protocol.ByteOrder,
-                  DAQ: DAQ,
-                  //  [
-                  // {
-                  //   MsgId: 1705,
-                  //   DaqNumber: 1, //index 从0开始
-                  //   EventChannel: 2, //1-3
-                  //   FirstPID: 5, //给高力的firstPID_1st_channel
-                  //   CycleTime: 100, //
-                  //   Priority: 5, //高力
-                  //   Measurement: [],
-                  //   Measurements: [
-                  //     [
-                  //       "Dcm_cntStrtSnceRgn",
-                  //       "MonitoringAdjustment_e_I.B_thachnegx",
-                  //     ],
-                  //     ["PPfilDif_nrPartSnsrB1"],
-                  //   ],
-                  // },
-                  // ],
-                },
-              ],
-              // CCP: [
-              //   {
-              //     RequestId: 1707,
-              //     ResponseId: 1705,
-              //     StationAddress: 9876,
-              //     ByteOrder: "MSB_FIRST",
-              //     DAQ: [
-              //       {
-              //         MsgId: 1705,
-              //         DaqNumber: 0,
-              //         EventChannel: 1,
-              //         // "FirstPID": 0,
-              //         CycleTime: 10,
-              //         // "Priority": 6,
-              //         Measurement: [],
-              //         Measurements: [
-              //           ["B_hspzw", "B_hspzw_old"],
-              //           ["B_hstctfa1", "B_cruisercnckact"],
-              //         ],
-              //       },
-              //       {
-              //         MsgId: 1705,
-              //         DaqNumber: 1, //index 从0开始
-              //         EventChannel: 2, //1-3
-              //         // "FirstPID": 5, //
-              //         CycleTime: 100, //
-              //         // "Priority": 5, //高力
-              //         Measurement: [],
-              //         Measurements: [
-              //           [
-              //             "Dcm_cntStrtSnceRgn",
-              //             "MonitoringAdjustment_e_I.B_thachnegx",
-              //           ],
-              //           ["PPfilDif_nrPartSnsrB1"],
-              //         ],
-              //       },
-              //     ],
-              //   },
-              // ],
-            },
-            {
-              Channel: 1,
-              Baudrate: 500000,
-              DBC: [],
-            },
-          ],
-        };
-        // if (this.fileType == "xcp") {
-        // } else if (this.fileType == "ccp") {
-        // }
-        if (this.fileType == "ccp") {
-          a2lObj.ChannelCfg[0][
-            this.fileType.toUpperCase()
-          ][0].StationAddress = this.protocol.StationAddress;
-        }
-        //
-
-        var tagObj = {
-          ProjectId: this.projectNumberVal,
-          VehicleId: this.vehId,
-          sn:this.testsn,
-          Package: packageSelected,
-          Task: this.taskSelected,
-          MainPack: packageSelected[this.mainPackageIndex],
-          MainTask: this.taskSelected[this.mainTaskIndex],
-          Comment: this.comment,
-          A2L: this.locationA2l,
-          HEX: this.locationHex,
-          Tester: this.username,
-          UserGroup: "internal", //localStorage.getItem('group')
-
-          confName:'DataCfg_'+ this.jsonName+'_' + this.getTime(),
-
-          // a2lChannel: this.a2lChannel,
-          protoolType: this.protocol.protoolType,
-
-          BMR: this.BMRchecked,
-        };
-        a2lObj.Tag = tagObj;
-        if (this.addStart) {
-          a2lObj.StartRecord = [
-            // {
-            //   SignalName: "B__kl15",
-            //   Source: 1,
-            //   Operator: ">",
-            //   Threshold: 0,
-            //   CascadeOp: "and",
-            // },
-          ];
-          a2lObj.StopRecord = [
-            {
-              SignalName: "B__kl15",
-              Source: 1,
-              Operator: "<",
-              Threshold: 1,
-              CascadeOp: "and",
-            },
-          ];
-        } else {
-          a2lObj.StartRecord = [];
-          a2lObj.StopRecord = [];
-        }
-        //
-        recordConf.push(a2lObj);
-        // recordConf=a2lObj
-      }
-      // if (this.dbcChannel != 2) {
-      //   recordConf.push({
-      //     Channel: this.dbcChannel,
-      //     BAUDRATE: 500000,
-      //     Monitoring: Monitoring,
-      //   });
+          // {
+          //   Channel: 1,
+          //   Baudrate: 500000,
+          //   DBC: [],
+          // },
+        ],
+      };
+      // if (this.fileType == "xcp") {
+      // } else if (this.fileType == "ccp") {
       // }
+      if (this.fileType == "ccp") {
+        a2lObj.ChannelCfg[0][
+          this.fileType.toUpperCase()
+        ][0].StationAddress = this.protocol.StationAddress;
+      }
+      //
+
+      var tagObj = {
+        ProjectId: this.projectNumberVal,
+        VehicleId: this.vehId,
+        // sn:this.testsn,
+        Package: packageSelected,
+        Task: this.taskSelected,
+        MainPack: packageSelected[this.mainPackageIndex],
+        MainTask: this.taskSelected[this.mainTaskIndex],
+        Comment: this.comment,
+        A2L: this.locationA2l,
+        HEX: this.locationHex,
+        Tester: this.username,
+        UserGroup: "internal", //localStorage.getItem('group')
+
+        confName: "DataCfg_" + this.jsonName + "_" + this.getTime(),
+
+        // a2lChannel: this.a2lChannel,
+        protoolType: this.protocol.protoolType,
+
+        BMR: this.BMRchecked,
+      };
+      a2lObj.Tag = tagObj;
+      if (this.addStart) {
+        a2lObj.StartRecord = [
+          // {
+          //   SignalName: "B__kl15",
+          //   Source: 1,
+          //   Operator: ">",
+          //   Threshold: 0,
+          //   CascadeOp: "and",
+          // },
+        ];
+        a2lObj.StopRecord = [
+          {
+            SignalName: "B__kl15",
+            Source: 1,
+            Operator: "<",
+            Threshold: 1,
+            CascadeOp: "and",
+          },
+        ];
+      } else {
+        a2lObj.StartRecord = [];
+        a2lObj.StopRecord = [];
+      }
+      //
+      if (this.a2lChannel != 2) {
+        recordConf.push(a2lObj);
+      }
+
+      // recordConf=a2lObj
+      // }
+      if (this.dbcChannel != 2) {
+        recordConf[0].ChannelCfg.push({
+          Channel: 1, //this.dbcChannel
+          BAUDRATE: 500000,
+          DBC: Monitoring,
+        });
+      }
       // recordConf.sort((a, b) => {
       //   return a.Channel - b.Channel;
       // });
-
       var axiosData = {
         filename: this.locationA2l,
         adid: this.adid,
@@ -2224,7 +2237,7 @@ export default {
           a2lName: this.locationA2l,
           hexName: this.locationHex,
           user: this.username,
-          userGroup: localStorage.getItem("group"),
+          userGroup: localStorage.getItem("userGroup"),
           investigation: {
             investigationTopic: "",
             investigationSubTopic: "",
@@ -2283,17 +2296,18 @@ export default {
               type: "error",
               message: "提交失败",
             });
+            this.jsonButtonDisabled = false;
           }
 
           this.submitLoading = false;
+        })
+        .catch((res) => {
+          this.$message({
+            type: "error",
+            message: "提交失败!",
+          });
+          this.submitLoading = false;
         });
-      // .catch((res) => {
-      //   this.$message({
-      //     type: "error",
-      //     message: "提交失败",
-      //   });
-      //   this.submitLoading = false;
-      // });
     },
     jsonFile() {
       var jsonStr = JSON.stringify(this.jsonFileData);
@@ -2303,9 +2317,9 @@ export default {
       var d = new Date();
       var n = d.getTime();
       var file_name = this.locationA2l.slice(0, -4);
-      var name =
-        file_name + "-[JS]-" + n + Math.ceil(Math.random() * 1000) + ".json";
-
+      // var name =
+      //   file_name + "-[JS]-" + n + Math.ceil(Math.random() * 1000) + ".json";
+      var name = this.getTime() + ".json";
       saveAs(blob, name);
     },
     stepReduce() {
@@ -2512,13 +2526,13 @@ export default {
   },
   watch: {
     // jsonName(val){
-  // jsonNameReg(){
+    // jsonNameReg(){
     //   console.log(this.jsonName);
     // console.log(val);
     //   val=val.replace(/[^a-zA-Z0-9|\_]/g, "")
     //   console.log(val);
     //   // this.jsonName=this.jsonName.replace(/[^\d|\_]/g, "")
-     
+
     //   // this.jsonName=this.jsonName.replace(/[^]/g, "")
     // },
     // },
